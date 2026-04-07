@@ -470,7 +470,7 @@ function mTrab(id){
     '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Cedula *</label><input id="tc" value="'+(t.cedula||'')+'"></div><div class="field"><label>Telefono</label><input id="ttel" value="'+(t.tel||'')+'"></div></div>'+
     '<div class="field" style="margin-bottom:10px"><label>Correo</label><input id="tem" type="email" value="'+(t.email||'')+'"></div>'+
     '<div class="field" style="margin-bottom:10px"><label>Direccion</label><input id="tdir" value="'+(t.dir||'')+'"></div>'+
-    '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Area *</label><select id="ta" onchange="toggleSueldo(this.value)">'+selOpts(AREAS,t.area)+'</select></div><div class="field"><label>Cargo *</label><input id=\"tcar\" value=\"'+(t.cargo||'')+'\" placeholder=\"Escriba el cargo...\"></div></div>'+
+    '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Area *</label><select id="ta" onchange="toggleSueldo(this.value)">'+selOpts(AREAS,t.area)+'</select></div><div class="field"><label>Cargo *</label><input id="tcar" value="'+(t.cargo||'')+'" placeholder="Escriba el cargo..."></div></div>'+
     '<div class="field" id="sueldo-field" style="margin-bottom:10px;display:'+(t.area==='ADMINISTRACION'?'block':'none')+'"><label>Sueldo mensual ($) *</label><input type="number" id="tsueldo" min="0" step="0.01" value="'+(t.sueldo||'')+'" placeholder="Ej: 500.00"></div>'+
     '<div class="field" style="margin-bottom:10px"><label>Fecha primer ingreso *</label><input type="date" id="tfi" value="'+(t.fechaIngreso||hoy())+'"></div>'+
     '<div class="sep"></div><p style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Datos bancarios</p>'+
