@@ -937,6 +937,7 @@ function rInf(){
 window.genInf=function(){
   const desde=document.getElementById('id').value,hasta=document.getElementById('ih').value,area=document.getElementById('ia').value;
   iD=desde;iH=hasta;iA=area;
+  // Si no se selecciona área, mostrar todos los trabajadores juntos (nómina junta)
   const tr=CACHE.trabajadores.filter(t=>!area||t.area===area);
   let tD=0,tP=0,tDes=0,n=0;
   const fi=tr.map(t=>{
