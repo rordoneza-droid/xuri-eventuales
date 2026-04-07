@@ -335,35 +335,43 @@ function bdgCls(est){return{activo:'bdg-g',contrato:'bdg-b',baja:'bdg-r',archiva
 function estLbl(est){return{activo:'Activo',contrato:'Contrato',baja:'Baja',archivado:'Lista negra'}[est]||est}
 function stars(n){return[1,2,3,4,5,6,7,8,9,10].map(i=>'<span style="font-size:15px;color:'+(i<=n?'#f59e0b':'#ddd')+'">'+(i<=n?'&#9733;':'&#9734;')+'</span>').join('')}
 // TRABAJADORES
-function qid(id){return id.replace(/'/g,"\\'")}
+// RRHH - TRABAJADORES
+// Uso data-id en botones para evitar problemas de escape con IDs de Firestore
 function rT(){
-  const todos=CACHE.trabajadores.filter(t=>t.estado!=='archivado');
-  const activos=todos.filter(t=>t.estado==='activo'||t.estado==='contrato');
-  const inactivos=todos.filter(t=>t.estado==='baja');
+  var todos=CACHE.trabajadores.filter(function(t){return t.estado!=='archivado';});
+  var activos=todos.filter(function(t){return t.estado==='activo'||t.estado==='contrato';});
+  var inactivos=todos.filter(function(t){return t.estado==='baja';});
+
   function wCard(t){
-    const esActivo=t.estado==='activo';
-    const esBaja=t.estado==='baja';
-    const sid=qid(t.id);
-    return '<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo">'+
-      '<div class="wname">'+t.nombres+'</div>'+
-      '<div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div>'+
-      '<div class="wtiny">'+t.cargo+'</div>'+
-      '<div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.cuenta||'Sin cuenta')+'</div>'+
-      '<div style="margin-top:6px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div>'+
-      '<div class="wact">'+
-        '<button class="btn bgr bsm" onclick="mTrab(\''+sid+'\')">Editar</button>'+
-        (esActivo?'<button class="btn bo bsm" onclick="togActivo(\''+sid+'\',\'inactivo\')">Inactivar</button>':'')+
-        (esBaja?'<button class="btn bg bsm" onclick="togActivo(\''+sid+'\',\'activo\')">Activar</button>':'')+
-        (esActivo?'<button class="btn bo bsm" onclick="mContr(\''+sid+'\')">Contrato</button>':'')+
-        ((esActivo||esBaja)?'<button class="btn br bsm" onclick="mNegra(\''+sid+'\')">Lista negra</button>':'')+
-        '<button class="btn br bsm" onclick="mBorr(\'trabajador\',\''+sid+'\')">Eliminar</button>'+
-      '</div></div></div>';
+    var esActivo=t.estado==='activo';
+    var esBaja=t.estado==='baja';
+    return '<div class="wcard">'+
+      '<div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div>'+
+      '<div class="winfo">'+
+        '<div class="wname">'+t.nombres+'</div>'+
+        '<div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div>'+
+        '<div class="wtiny">'+t.cargo+'</div>'+
+        '<div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.cuenta||'Sin cuenta')+'</div>'+
+        '<div style="margin-top:6px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div>'+
+        '<div class="wact">'+
+          '<button class="btn bgr bsm" data-id="'+t.id+'" onclick="mTrab(this.dataset.id)">Editar</button>'+
+          (esActivo?'<button class="btn bo bsm" data-id="'+t.id+'" onclick="togActivo(this.dataset.id,'inactivo')">Inactivar</button>':'')+
+          (esBaja?'<button class="btn bg bsm" data-id="'+t.id+'" onclick="togActivo(this.dataset.id,'activo')">Activar</button>':'')+
+          (esActivo?'<button class="btn bo bsm" data-id="'+t.id+'" onclick="mContr(this.dataset.id)">Contrato</button>':'')+
+          ((esActivo||esBaja)?'<button class="btn br bsm" data-id="'+t.id+'" onclick="mNegra(this.dataset.id)">Lista negra</button>':'')+
+          '<button class="btn br bsm" data-id="'+t.id+'" onclick="mBorr('trabajador',this.dataset.id)">Eliminar</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
   }
+
   pg('trabajadores',
-    '<div class="shdr"><div><div class="stit">Trabajadores</div>'+
-    '<div class="ssub">'+activos.length+' activo'+(activos.length!==1?'s':'')+
-    ' &middot; '+inactivos.length+' inactivo'+(inactivos.length!==1?'s':'')+'</div></div>'+
-    '<button class="btn bg bsm" onclick="mTrab(null)">+ Nuevo</button></div>'+
+    '<div class="shdr">'+
+      '<div><div class="stit">Trabajadores</div>'+
+      '<div class="ssub">'+activos.length+' activo'+(activos.length!==1?'s':'')+
+      ' &middot; '+inactivos.length+' inactivo'+(inactivos.length!==1?'s':'')+'</div></div>'+
+      '<button class="btn bg bsm" onclick="mTrab(null)">+ Nuevo</button>'+
+    '</div>'+
     (activos.length
       ?'<div style="font-size:11px;font-weight:700;color:var(--v);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;padding-left:2px">Activos ('+activos.length+')</div>'+activos.map(wCard).join('')
       :'<div class="empty">Sin trabajadores activos</div>')+
@@ -373,25 +381,33 @@ function rT(){
   );
 }
 window.togActivo=async function(id,nuevoEstado){
-  const t=CACHE.trabajadores.find(x=>x.id===id);
+  var t=CACHE.trabajadores.find(function(x){return x.id===id;});
+  if(!t)return;
   if(nuevoEstado==='inactivo'){
-    const sid=qid(id);
+    // Store id in a closure var, not in onclick string
+    window._inactivarId=id;
     openModal('Inactivar a '+t.nombres,
-      '<p style="font-size:13px;margin-bottom:12px">El trabajador quedara inactivo y no aparecera en marcacion diaria.</p>'+
-      '<div class="field" style="margin-bottom:10px"><label>Fecha de baja</label><input type="date" id="fb2" value="'+hoy()+'"></div>'+
+      '<p style="font-size:13px;margin-bottom:12px">El trabajador quedara inactivo y no aparecera en marcacion diaria del Jefe de Bodega.</p>'+
+      '<div class="field" style="margin-bottom:10px"><label>Fecha</label><input type="date" id="fb2" value="'+hoy()+'"></div>'+
       '<div class="field" style="margin-bottom:14px"><label>Motivo</label><textarea id="fmot2" placeholder="Ej: vacaciones, enfermedad..."></textarea></div>'+
       '<div class="brow" style="justify-content:flex-end">'+
         '<button class="btn bgr" onclick="closeModal()">Cancelar</button>'+
-        '<button class="btn bo" onclick="confInact(\''+sid+'\')">Inactivar</button>'+
+        '<button class="btn bo" onclick="confInact()">Inactivar</button>'+
       '</div>');
   } else {
     await fupd('trabajadores',id,{estado:'activo',fechaBaja:'',motivoBaja:''});
-    toast('Trabajador reactivado correctamente');
+    toast('Trabajador reactivado - ya aparece en marcacion de Bodega');
   }
-};
-window.confInact=async function(id){
-  await fupd('trabajadores',id,{estado:'baja',fechaBaja:document.getElementById('fb2').value,motivoBaja:document.getElementById('fmot2').value});
-  closeModal();toast('Trabajador marcado como inactivo');
+}
+window.confInact=async function(){
+  var id=window._inactivarId;
+  if(!id)return;
+  await fupd('trabajadores',id,{estado:'baja',
+    fechaBaja:document.getElementById('fb2').value,
+    motivoBaja:document.getElementById('fmot2').value});
+  window._inactivarId=null;
+  closeModal();
+  toast('Trabajador inactivado - ya no aparece en marcacion de Bodega');
 }
 function selOpts(arr,val){return arr.map(a=>'<option'+(a===val?' selected':'')+'>'+a+'</option>').join('')}
 function mTrab(id){
@@ -496,74 +512,129 @@ window.mEdN=mEdN;
 async function gEdN(id){await fupd('listaNegra',id,{calificacion:calV,comentario:document.getElementById('ncal').value});closeModal();toast('Nota actualizada correctamente');}
 window.gEdN=gEdN;
 // MARCACION
-let mFecha=hoy(),mMap={};
+// mMap: estado local del dia. mFechaLoaded: evita pisar cambios del usuario en re-renders.
+let mFecha=hoy(),mMap={},mFechaLoaded='';
+
 function rM(){
-  const act=CACHE.trabajadores.filter(t=>t.estado==='activo');
-  const bajas=CACHE.trabajadores.filter(t=>t.estado==='baja'&&t.fechaBaja&&((new Date()-new Date(t.fechaBaja+'T12:00:00'))/86400000)<7);
-  const d=new Date(mFecha+'T12:00:00');const eFin=d.getDay()===0||d.getDay()===6;
-  mMap={};CACHE.asistencias.filter(a=>a.fecha===mFecha).forEach(a=>{mMap[a.tId]={presente:true,entrada:a.entrada,salida:a.salida,feriado:a.feriado,obs:a.obs,aid:a.id};});
-  pg('marcacion',
-    '<div class="shdr"><div><div class="stit">Marcacion diaria</div><div class="ssub">'+fmtFL(mFecha)+'</div></div><div class="field" style="margin:0"><input type="date" id="mfd" value="'+mFecha+'" onchange="chFecha(this.value)" style="font-size:13px;padding:7px 10px"></div></div>'+
-    (eFin?'<div class="alerto">Fin de semana - tarifa $25/dia</div>':'')+
-    bajas.map(t=>'<div class="nbaja"><strong>Aviso de baja:</strong> '+t.nombres+' fue dado de baja el '+fmtF(t.fechaBaja)+(t.motivoBaja?' - '+t.motivoBaja:'')+'. No debe marcarse.</div>').join('')+
-    act.map(t=>{
-      const m=mMap[t.id]||{presente:false,entrada:'08:00',salida:'18:00',feriado:eFin,obs:''};
-      const c=m.presente?calcP(mFecha,m.entrada,m.salida,m.feriado):{};
-      // FIX 2: Feriado checkbox inline, compact, not oversized
-      return'<div class="mcard'+(m.presente?' pre':'')+'" id="mc-'+t.id+'"><div class="mtop"><div class="mchk'+(m.presente?' on':'')+'" id="mchk-'+t.id+'" onclick="togP(\''+t.id+'\','+eFin+')">'+(m.presente?'&#x2713;':'')+
-      '</div><div style="flex:1"><div class="mname">'+t.nombres+'</div><div class="marea">'+t.area+'</div></div>'+
-      (m.presente&&c.pago!=null?'<div style="text-align:right"><div class="mpago">$'+c.pago.toFixed(2)+'</div>'+(c.atrasoH>0?'<div class="matr">-'+c.atrasoH+'h (-$'+c.descVal.toFixed(2)+')</div>':'')+'</div>':'<div id="mcalc-'+t.id+'"></div>')+
-      '</div><div class="mdet'+(m.presente?' show':'')+'" id="mdet-'+t.id+'">'+
-      '<div class="mtimes">'+
-        '<div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" onchange="updC(\''+t.id+'\','+eFin+')"></div>'+
-        '<div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" onchange="updC(\''+t.id+'\','+eFin+')"></div>'+
+  const act=CACHE.trabajadores.filter(function(t){return t.estado==='activo';});
+  const bajas=CACHE.trabajadores.filter(function(t){return t.estado==='baja'&&t.fechaBaja&&((new Date()-new Date(t.fechaBaja+'T12:00:00'))/86400000)<7;});
+  const d=new Date(mFecha+'T12:00:00');
+  const eFin=d.getDay()===0||d.getDay()===6;
+
+  // Cargar desde Firebase solo si cambia la fecha (preservar ediciones en curso)
+  if(mFechaLoaded!==mFecha){
+    mFechaLoaded=mFecha;
+    mMap={};
+    CACHE.asistencias.filter(function(a){return a.fecha===mFecha;}).forEach(function(a){
+      mMap[a.tId]={presente:true,entrada:a.entrada,salida:a.salida,feriado:a.feriado,obs:a.obs||''};
+    });
+  } else {
+    // Re-render de Firebase: solo agregar trabajadores nuevos que no habia antes
+    CACHE.asistencias.filter(function(a){return a.fecha===mFecha;}).forEach(function(a){
+      if(!mMap[a.tId]) mMap[a.tId]={presente:true,entrada:a.entrada,salida:a.salida,feriado:a.feriado,obs:a.obs||''};
+    });
+  }
+
+  var rows=act.map(function(t){
+    var m=mMap[t.id]||{presente:false,entrada:'08:00',salida:'18:00',feriado:eFin,obs:''};
+    var c=m.presente?calcP(mFecha,m.entrada,m.salida,m.feriado):null;
+    var pagoHtml=c?'<div class="mpago">$'+c.pago.toFixed(2)+'</div>'+(c.atrasoH>0?'<div class="matr">-'+c.atrasoH+'h (-$'+c.descVal.toFixed(2)+')</div>':''):'';
+    return '<div class="mcard'+(m.presente?' pre':'')+'" id="mc-'+t.id+'">'+
+      '<div class="mtop">'+
+        '<div class="mchk'+(m.presente?' on':'')+'" id="mchk-'+t.id+'" data-id="'+t.id+'" data-efin="'+eFin+'" onclick="togP(this.dataset.id,this.dataset.efin==='true')">'+(m.presente?'&#x2713;':'')+'</div>'+
+        '<div style="flex:1"><div class="mname">'+t.nombres+'</div><div class="marea">'+t.area+'</div></div>'+
+        '<div id="mpd-'+t.id+'" style="text-align:right">'+pagoHtml+'</div>'+
       '</div>'+
-      // FIX 2: Feriado as a compact inline label, not a giant block
-      '<label class="mfer-row"><input type="checkbox" id="mfer-'+t.id+'" '+(m.feriado?'checked':'')+' onchange="updC(\''+t.id+'\','+eFin+')" style="width:18px;height:18px;accent-color:var(--v)"> <span>Feriado (tarifa $25)</span></label>'+
-      '<div class="field"><label>Observacion</label><input id="mobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div></div></div>';
-    }).join('')+
-    // Save button always visible and prominent, outside worker list
-    '<div style="position:sticky;bottom:8px;margin-top:16px;padding:4px"><button class="btn bg bfull" style="box-shadow:0 4px 12px rgba(26,92,50,.35);font-size:15px;padding:14px" onclick="guardDia()">&#x1F4BE; Guardar marcacion del dia</button></div>');
+      '<div class="mdet'+(m.presente?' show':'')+'" id="mdet-'+t.id+'">'+
+        '<div class="mtimes">'+
+          '<div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" data-id="'+t.id+'" data-efin="'+eFin+'" onchange="updC(this.dataset.id,this.dataset.efin==='true')"></div>'+
+          '<div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" data-id="'+t.id+'" data-efin="'+eFin+'" onchange="updC(this.dataset.id,this.dataset.efin==='true')"></div>'+
+        '</div>'+
+        '<label class="mfer-row"><input type="checkbox" id="mfer-'+t.id+'" '+(m.feriado?'checked':'')+' data-id="'+t.id+'" data-efin="'+eFin+'" onchange="updC(this.dataset.id,this.dataset.efin==='true')" style="width:18px;height:18px;accent-color:var(--v)"><span>Feriado (tarifa $25)</span></label>'+
+        '<div class="field"><label>Observacion</label><input id="mobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  pg('marcacion',
+    '<div class="shdr"><div><div class="stit">Marcacion diaria</div><div class="ssub">'+fmtFL(mFecha)+'</div></div>'+
+    '<div class="field" style="margin:0"><input type="date" id="mfd" value="'+mFecha+'" onchange="chFecha(this.value)" style="font-size:13px;padding:7px 10px"></div></div>'+
+    (eFin?'<div class="alerto">Fin de semana - tarifa $25/dia</div>':'')+
+    bajas.map(function(t){return'<div class="nbaja"><strong>Aviso de baja:</strong> '+t.nombres+' fue dado de baja el '+fmtF(t.fechaBaja)+(t.motivoBaja?' - '+t.motivoBaja:'')+'. No debe marcarse.</div>';}).join('')+
+    rows+
+    '<div style="position:sticky;bottom:8px;margin-top:16px;padding:4px">'+
+      '<button class="btn bg bfull" style="box-shadow:0 4px 12px rgba(26,92,50,.35);font-size:15px;padding:14px" onclick="guardDia()">&#x1F4BE; Guardar marcacion del dia</button>'+
+    '</div>');
 }
-window.chFecha=function(f){mFecha=f;mMap={};rM();};
+
+window.chFecha=function(f){
+  mFecha=f;
+  mFechaLoaded='';
+  mMap={};
+  rM();
+};
+
 window.togP=function(tId,eFin){
-  const m=mMap[tId]||{presente:false,entrada:'08:00',salida:'18:00',feriado:eFin,obs:''};
-  m.presente=!m.presente;mMap[tId]=m;
-  const chk=document.getElementById('mchk-'+tId);
-  chk.innerHTML=m.presente?'&#x2713;':'';chk.className='mchk'+(m.presente?' on':'');
-  document.getElementById('mc-'+tId).className='mcard'+(m.presente?' pre':'');
-  document.getElementById('mdet-'+tId).className='mdet'+(m.presente?' show':'');
+  if(!mMap[tId]) mMap[tId]={presente:false,entrada:'08:00',salida:'18:00',feriado:eFin,obs:''};
+  mMap[tId].presente=!mMap[tId].presente;
+  var m=mMap[tId];
+  var chk=document.getElementById('mchk-'+tId);
+  if(chk){chk.innerHTML=m.presente?'&#x2713;':'';chk.className='mchk'+(m.presente?' on':'');}
+  var card=document.getElementById('mc-'+tId);
+  if(card)card.className='mcard'+(m.presente?' pre':'');
+  var det=document.getElementById('mdet-'+tId);
+  if(det)det.className='mdet'+(m.presente?' show':'');
+  var pd=document.getElementById('mpd-'+tId);
+  if(pd&&!m.presente)pd.innerHTML='';
   if(m.presente)updC(tId,eFin);
 };
+
 window.updC=function(tId,eFin){
-  const en=document.getElementById('ment-'+tId)?.value||'08:00';
-  const sa=document.getElementById('msal-'+tId)?.value||'18:00';
-  const fe=document.getElementById('mfer-'+tId)?.checked||eFin;
-  const c=calcP(mFecha,en,sa,fe);
-  const top=document.getElementById('mc-'+tId)?.querySelector('.mtop');
-  if(top){let pd=top.querySelector('[data-pd]');if(!pd){pd=document.createElement('div');pd.setAttribute('data-pd','1');pd.style.textAlign='right';top.appendChild(pd);}pd.innerHTML='<div class="mpago">$'+c.pago.toFixed(2)+'</div>'+(c.atrasoH>0?'<div class="matr">-'+c.atrasoH+'h (-$'+c.descVal.toFixed(2)+')</div>':'');}
+  var entEl=document.getElementById('ment-'+tId);
+  var salEl=document.getElementById('msal-'+tId);
+  var ferEl=document.getElementById('mfer-'+tId);
+  var en=entEl?entEl.value:'08:00';
+  var sa=salEl?salEl.value:'18:00';
+  var fe=ferEl?ferEl.checked:eFin;
+  var c=calcP(mFecha,en,sa,fe);
+  // Actualizar SOLO el div de precio con id unico - nunca hay duplicado
+  var pd=document.getElementById('mpd-'+tId);
+  if(pd)pd.innerHTML='<div class="mpago">$'+c.pago.toFixed(2)+'</div>'+(c.atrasoH>0?'<div class="matr">-'+c.atrasoH+'h (-$'+c.descVal.toFixed(2)+')</div>':'');
   if(mMap[tId]){mMap[tId].entrada=en;mMap[tId].salida=sa;mMap[tId].feriado=fe;}
 };
 
-// FIX 5: Guard day function, always available
 window.guardDia=async function(){
-  const act=CACHE.trabajadores.filter(t=>t.estado==='activo');
-  const btns=document.querySelectorAll('[onclick="guardDia()"]');
-  btns.forEach(b=>{b.disabled=true;b.textContent='Guardando...';});
+  var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo';});
+  var btns=document.querySelectorAll('[onclick="guardDia()"]');
+  btns.forEach(function(b){b.disabled=true;b.textContent='Guardando...';});
   try{
-    await Promise.all(CACHE.asistencias.filter(a=>a.fecha===mFecha&&act.find(t=>t.id===a.tId)).map(a=>fdel('asistencias',a.id)));
-    let n=0;
-    await Promise.all(act.filter(t=>mMap[t.id]?.presente).map(t=>{
-      const en=document.getElementById('ment-'+t.id)?.value||mMap[t.id].entrada;
-      const sa=document.getElementById('msal-'+t.id)?.value||mMap[t.id].salida;
-      const fe=document.getElementById('mfer-'+t.id)?.checked||false;
-      const ob=document.getElementById('mobs-'+t.id)?.value||'';
-      n++;return fadd('asistencias',{tId:t.id,fecha:mFecha,entrada:en,salida:sa,feriado:fe,obs:ob});
-    }));
-    toast('Marcacion guardada: '+n+' persona'+(n!==1?'s':''));
+    // Leer valores actuales del DOM ANTES de cualquier operacion async
+    var registros=act.filter(function(t){return mMap[t.id]&&mMap[t.id].presente;}).map(function(t){
+      var entEl=document.getElementById('ment-'+t.id);
+      var salEl=document.getElementById('msal-'+t.id);
+      var ferEl=document.getElementById('mfer-'+t.id);
+      var obsEl=document.getElementById('mobs-'+t.id);
+      return{
+        tId:t.id,fecha:mFecha,
+        entrada:entEl?entEl.value:mMap[t.id].entrada,
+        salida:salEl?salEl.value:mMap[t.id].salida,
+        feriado:ferEl?ferEl.checked:false,
+        obs:obsEl?obsEl.value:''
+      };
+    });
+    // Borrar registros existentes del dia
+    await Promise.all(CACHE.asistencias.filter(function(a){return a.fecha===mFecha&&act.find(function(t){return t.id===a.tId;});}).map(function(a){return fdel('asistencias',a.id);}));
+    // Guardar nuevos
+    await Promise.all(registros.map(function(r){return fadd('asistencias',r);}));
+    // Actualizar mMap con lo guardado para que el listener no lo pise
+    registros.forEach(function(r){
+      mMap[r.tId]={presente:true,entrada:r.entrada,salida:r.salida,feriado:r.feriado,obs:r.obs};
+    });
+    mFechaLoaded=mFecha;
+    toast('Marcacion guardada: '+registros.length+' persona'+(registros.length!==1?'s':''));
   }catch(e){toast('Error: '+e.message,'err');}
-  finally{btns.forEach(b=>{b.disabled=false;b.innerHTML='&#x1F4BE; Guardar marcacion del dia';});}
-};
+  finally{btns.forEach(function(b){b.disabled=false;b.innerHTML='&#x1F4BE; Guardar marcacion del dia';});}
+}
 // HISTORIAL
 function rHist(){
   const as=[...CACHE.asistencias].sort((a,b)=>b.fecha.localeCompare(a.fecha));
