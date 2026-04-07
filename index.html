@@ -253,7 +253,7 @@ function _scheduleRender(){
     if(!ROL||!tabActual)return;
     var modalOpen=document.getElementById('modal')&&document.getElementById('modal').classList.contains('show');
     if(modalOpen)return;
-    var renders={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,historial:rHist,bajas:rBajas,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,transferencias:rTrans,personal:rPers,jlnegra:rJLN};
+    var renders={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,historial:rHist,bajas:rBajas,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,faltas:rFaltas,transferencias:rTrans,personal:rPers,jlnegra:rJLN};
     if(renders[tabActual])renders[tabActual]();
   },80);
 }
@@ -299,7 +299,7 @@ window.togglePin=function(){
 let ROL=null,rolSel='asistente',tabActual='';
 const MODS={
   asistente:{lbl:'Asistente RRHH',tabs:[{id:'trabajadores',ico:'T',lbl:'Trabajadores'},{id:'estados',ico:'R',lbl:'Estados'},{id:'lnegra',ico:'N',lbl:'Lista negra'}]},
-  bodega:{lbl:'Jefe Bodega',tabs:[{id:'marcacion',ico:'M',lbl:'Marcacion'},{id:'historial',ico:'H',lbl:'Historial'},{id:'bajas',ico:'B',lbl:'Bajas'}]},
+  bodega:{lbl:'Jefe Bodega',tabs:[{id:'marcacion',ico:'M',lbl:'Marcacion'},{id:'faltas',ico:'!',lbl:'Faltas'},{id:'historial',ico:'H',lbl:'Historial'},{id:'bajas',ico:'B',lbl:'Bajas'}]},
   supervisor:{lbl:'Supervisor',tabs:[{id:'sv_vista',ico:'V',lbl:'Vista'},{id:'sv_periodos',ico:'P',lbl:'Periodos'}]},
   jefe:{lbl:'Jefe RRHH',tabs:[{id:'informe',ico:'I',lbl:'Informe'},{id:'transferencias',ico:'$',lbl:'Pagos'},{id:'personal',ico:'T',lbl:'Personal'},{id:'jlnegra',ico:'N',lbl:'Negra'}]}
 };
@@ -325,7 +325,7 @@ function setTab(id){
   document.querySelectorAll('.btab').forEach(b=>b.classList.remove('act'));
   document.getElementById('pg-'+id)?.classList.add('show');
   document.getElementById('bt-'+id)?.classList.add('act');
-  const r={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,historial:rHist,bajas:rBajas,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,transferencias:rTrans,personal:rPers,jlnegra:rJLN};
+  const r={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,historial:rHist,bajas:rBajas,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,faltas:rFaltas,transferencias:rTrans,personal:rPers,jlnegra:rJLN};
   if(r[id])r[id]();
 }
 window.setTab=setTab;
@@ -355,11 +355,11 @@ function rT(){
         '<div style="margin-top:6px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div>'+
         '<div class="wact">'+
           '<button class="btn bgr bsm" data-id="'+t.id+'" onclick="mTrab(this.dataset.id)">Editar</button>'+
-          (esActivo?'<button class="btn bo bsm" data-id="'+t.id+'" onclick="togActivo(this.dataset.id,'inactivo')">Inactivar</button>':'')+
-          (esBaja?'<button class="btn bg bsm" data-id="'+t.id+'" onclick="togActivo(this.dataset.id,'activo')">Activar</button>':'')+
+          (esActivo?'<button class="btn bo bsm" data-id="'+t.id+'" data-estado="inactivo" onclick="togActivo(this.dataset.id,this.dataset.estado)">Inactivar</button>':'')+
+          (esBaja?'<button class="btn bg bsm" data-id="'+t.id+'" data-estado="activo" onclick="togActivo(this.dataset.id,this.dataset.estado)">Activar</button>':'')+
           (esActivo?'<button class="btn bo bsm" data-id="'+t.id+'" onclick="mContr(this.dataset.id)">Contrato</button>':'')+
           ((esActivo||esBaja)?'<button class="btn br bsm" data-id="'+t.id+'" onclick="mNegra(this.dataset.id)">Lista negra</button>':'')+
-          '<button class="btn br bsm" data-id="'+t.id+'" onclick="mBorr('trabajador',this.dataset.id)">Eliminar</button>'+
+          '<button class="btn br bsm" data-id="'+t.id+'" data-tipo="trabajador" onclick="mBorr(this.dataset.tipo,this.dataset.id)">Eliminar</button>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -539,18 +539,19 @@ function rM(){
     var m=mMap[t.id]||{presente:false,entrada:'08:00',salida:'18:00',feriado:eFin,obs:''};
     var c=m.presente?calcP(mFecha,m.entrada,m.salida,m.feriado):null;
     var pagoHtml=c?'<div class="mpago">$'+c.pago.toFixed(2)+'</div>'+(c.atrasoH>0?'<div class="matr">-'+c.atrasoH+'h (-$'+c.descVal.toFixed(2)+')</div>':''):'';
+    var eFinVal=eFin?1:0;
     return '<div class="mcard'+(m.presente?' pre':'')+'" id="mc-'+t.id+'">'+
       '<div class="mtop">'+
-        '<div class="mchk'+(m.presente?' on':'')+'" id="mchk-'+t.id+'" data-id="'+t.id+'" data-efin="'+eFin+'" onclick="togP(this.dataset.id,this.dataset.efin==='true')">'+(m.presente?'&#x2713;':'')+'</div>'+
+        '<div class="mchk'+(m.presente?' on':'')+'" id="mchk-'+t.id+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onclick="togPBtn(this)">'+(m.presente?'&#x2713;':'')+'</div>'+
         '<div style="flex:1"><div class="mname">'+t.nombres+'</div><div class="marea">'+t.area+'</div></div>'+
         '<div id="mpd-'+t.id+'" style="text-align:right">'+pagoHtml+'</div>'+
       '</div>'+
       '<div class="mdet'+(m.presente?' show':'')+'" id="mdet-'+t.id+'">'+
         '<div class="mtimes">'+
-          '<div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" data-id="'+t.id+'" data-efin="'+eFin+'" onchange="updC(this.dataset.id,this.dataset.efin==='true')"></div>'+
-          '<div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" data-id="'+t.id+'" data-efin="'+eFin+'" onchange="updC(this.dataset.id,this.dataset.efin==='true')"></div>'+
+          '<div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updCBtn(this)"></div>'+
+          '<div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updCBtn(this)"></div>'+
         '</div>'+
-        '<label class="mfer-row"><input type="checkbox" id="mfer-'+t.id+'" '+(m.feriado?'checked':'')+' data-id="'+t.id+'" data-efin="'+eFin+'" onchange="updC(this.dataset.id,this.dataset.efin==='true')" style="width:18px;height:18px;accent-color:var(--v)"><span>Feriado (tarifa $25)</span></label>'+
+        '<label class="mfer-row"><input type="checkbox" id="mfer-'+t.id+'" '+(m.feriado?'checked':'')+' data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updCBtn(this)" style="width:18px;height:18px;accent-color:var(--v)"><span>Feriado (tarifa $25)</span></label>'+
         '<div class="field"><label>Observacion</label><input id="mobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div>'+
       '</div>'+
     '</div>';
@@ -574,6 +575,8 @@ window.chFecha=function(f){
   rM();
 };
 
+window.togPBtn=function(el){togP(el.dataset.id, el.dataset.efin==='1');};
+window.updCBtn=function(el){updC(el.dataset.id, el.dataset.efin==='1');};
 window.togP=function(tId,eFin){
   if(!mMap[tId]) mMap[tId]={presente:false,entrada:'08:00',salida:'18:00',feriado:eFin,obs:''};
   mMap[tId].presente=!mMap[tId].presente;
@@ -656,40 +659,122 @@ function rBajas(){
 }
 
 function rSV(){
-  const act=CACHE.trabajadores.filter(t=>t.estado==='activo');
-  const hoyStr=hoy();
-  const marcHoy=CACHE.asistencias.filter(a=>a.fecha===hoyStr);
-  let tP=0;CACHE.asistencias.forEach(a=>{tP+=calcP(a.fecha,a.entrada,a.salida,a.feriado).pago;});
-  // Stats cards
-  const stats='<div class="srow" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px">'+
-    '<div class="stat"><div class="snum">'+act.length+'</div><div class="slbl">Activos</div></div>'+
-    '<div class="stat"><div class="snum">'+marcHoy.length+'</div><div class="slbl">Hoy marcados</div></div>'+
-    '<div class="stat"><div class="snum">$'+tP.toFixed(0)+'</div><div class="slbl">Acumulado</div></div>'+
-  '</div>';
-  // Marcaciones de hoy
-  let marcHoyHtml='<div class="card" style="margin-bottom:12px"><div class="stit" style="margin-bottom:10px">📅 Marcación de hoy</div>';
-  if(marcHoy.length===0){marcHoyHtml+='<div class="empty" style="padding:12px">Sin marcaciones registradas hoy</div>';}
-  else{marcHoyHtml+=marcHoy.map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)"><div class="av av-g" style="width:34px;height:34px;font-size:12px">'+inic(t.nombres)+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.nombres+'</div><div style="font-size:11px;color:var(--t2)">'+t.area+' · Entrada: '+a.entrada+(c.atrasoH>0?' · <span style="color:var(--r)">Atraso '+c.atrasoH+'h</span>':'')+'</div></div><div style="text-align:right"><strong style="color:var(--v)">$'+c.pago.toFixed(2)+'</strong></div></div>';}).join('');}
+  var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo';});
+  var hoyStr=hoy();
+  var marcHoy=CACHE.asistencias.filter(function(a){return a.fecha===hoyStr;});
+  var idsMarcadosHoy=marcHoy.map(function(a){return a.tId;});
+  // Trabajadores activos NO marcados hoy
+  var noMarcados=act.filter(function(t){return idsMarcadosHoy.indexOf(t.id)<0;});
+  var tP=0;
+  CACHE.asistencias.forEach(function(a){tP+=calcP(a.fecha,a.entrada,a.salida,a.feriado).pago;});
+
+  // ── Alerta de no marcados (siempre visible si hay activos sin marcar) ──
+  var alertaHtml='';
+  var horaActual=new Date().getHours();
+  var esDespues5pm=horaActual>=17;
+  if(noMarcados.length>0&&esDespues5pm){
+    alertaHtml=
+      '<div style="background:#fde8e4;border:2px solid var(--r);border-radius:12px;padding:14px 16px;margin-bottom:14px">'+
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
+          '<span style="font-size:20px">⚠️</span>'+
+          '<div>'+
+            '<div style="font-weight:800;color:var(--r);font-size:14px">'+noMarcados.length+' sin marcar hoy</div>'+
+            '<div style="font-size:11px;color:#c0392b">El Jefe de Bodega aun no los ha registrado</div>'+
+          '</div>'+
+        '</div>'+
+        noMarcados.map(function(t){
+          return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(192,57,43,.2)">'+
+            '<div class="av av-r" style="width:30px;height:30px;font-size:11px">'+inic(t.nombres)+'</div>'+
+            '<div><div style="font-weight:700;font-size:12px">'+t.nombres+'</div>'+
+            '<div style="font-size:11px;color:var(--r)">'+t.area+'</div></div>'+
+          '</div>';
+        }).join('')+
+      '</div>';
+  }
+
+  // ── Stats ──
+  var stats=
+    '<div class="srow" style="grid-template-columns:repeat(3,1fr);margin-bottom:14px">'+
+      '<div class="stat"><div class="snum">'+act.length+'</div><div class="slbl">Activos</div></div>'+
+      '<div class="stat"><div class="snum '+(noMarcados.length>0?'" style="color:var(--r)':'')+'">'+(act.length-noMarcados.length)+'</div><div class="slbl">Marcados hoy</div></div>'+
+      '<div class="stat"><div class="snum">$'+tP.toFixed(0)+'</div><div class="slbl">Acumulado</div></div>'+
+    '</div>';
+
+  // ── Marcaciones de hoy ──
+  var marcHoyHtml='<div class="card" style="margin-bottom:12px"><div class="stit" style="margin-bottom:10px">Marcacion de hoy</div>';
+  if(marcHoy.length===0){
+    marcHoyHtml+='<div class="empty" style="padding:12px">Sin marcaciones registradas hoy</div>';
+  } else {
+    marcHoyHtml+=marcHoy.map(function(a){
+      var t=CACHE.trabajadores.find(function(x){return x.id===a.tId;});
+      if(!t)return'';
+      var c=calcP(a.fecha,a.entrada,a.salida,a.feriado);
+      var esJustif=a.justificado;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)">'+
+        '<div class="av '+(esJustif?'av-k':'av-g')+'" style="width:34px;height:34px;font-size:12px">'+inic(t.nombres)+'</div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.nombres+'</div>'+
+          '<div style="font-size:11px;color:var(--t2)">'+t.area+(esJustif?' · <span style="color:var(--a)">Justificado</span>':' · Entrada: '+a.entrada+(c.atrasoH>0?' · <span style="color:var(--r)">Atraso '+c.atrasoH+'h</span>':''))+'</div>'+
+        '</div>'+
+        '<div style="text-align:right"><strong style="color:'+(esJustif?'var(--a)':'var(--v)')+'">'+( esJustif?'Justif.':'$'+c.pago.toFixed(2))+'</strong></div>'+
+      '</div>';
+    }).join('');
+  }
   marcHoyHtml+='</div>';
-  // Workers by area with full detail
-  const pa=AREAS.map(a=>({a,workers:CACHE.trabajadores.filter(t=>t.area===a&&t.estado==='activo')})).filter(x=>x.workers.length>0);
-  let workersByArea='<div class="stit" style="margin-bottom:10px">👷 Personal activo por área</div>';
-  pa.forEach(x=>{
-    workersByArea+='<div class="card" style="margin-bottom:10px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span class="chip" style="font-size:12px;padding:4px 12px">'+x.a+'</span><span style="font-size:12px;font-weight:700;color:var(--t2)">'+x.workers.length+' persona'+(x.workers.length!==1?'s':'')+'</span></div>'+
-    x.workers.map(t=>{
-      const marcT=CACHE.asistencias.filter(a=>a.tId===t.id);
-      const r=resT(t.id,'','');
-      const hoyM=marcHoy.find(a=>a.tId===t.id);
-      return'<div class="sv-worker-card"><div class="av av-g">'+inic(t.nombres)+'</div><div class="sv-worker-info"><div class="sv-worker-name">'+t.nombres+'</div><div class="sv-worker-sub">C.I. '+t.cedula+' · '+t.cargo+'</div><div style="font-size:11px;color:var(--t3);margin-top:2px">Dias trabajados: <strong>'+r.dias+'</strong> · Acumulado: <strong>$'+r.pago.toFixed(2)+'</strong>'+(hoyM?' · <span style="color:var(--v);font-weight:700">✓ Hoy presente</span>':'')+'</div></div></div>';
-    }).join('')+'</div>';
+
+  // ── Personal por area ──
+  var pa=AREAS.map(function(a){return{a:a,workers:CACHE.trabajadores.filter(function(t){return t.area===a&&t.estado==='activo';})};}).filter(function(x){return x.workers.length>0;});
+  var workersByArea='<div class="stit" style="margin-bottom:10px">Personal activo por area</div>';
+  pa.forEach(function(x){
+    workersByArea+='<div class="card" style="margin-bottom:10px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+        '<span class="chip" style="font-size:12px;padding:4px 12px">'+x.a+'</span>'+
+        '<span style="font-size:12px;font-weight:700;color:var(--t2)">'+x.workers.length+' persona'+(x.workers.length!==1?'s':'')+'</span>'+
+      '</div>'+
+      x.workers.map(function(t){
+        var r=resT(t.id,'','');
+        var marcadoHoy=idsMarcadosHoy.indexOf(t.id)>=0;
+        var aHoy=marcHoy.find(function(a){return a.tId===t.id;});
+        var esJustif=aHoy&&aHoy.justificado;
+        return '<div class="sv-worker-card">'+
+          '<div class="av '+(marcadoHoy&&!esJustif?'av-g':esJustif?'av-k':'av-r')+'">'+inic(t.nombres)+'</div>'+
+          '<div class="sv-worker-info">'+
+            '<div class="sv-worker-name">'+t.nombres+'</div>'+
+            '<div class="sv-worker-sub">C.I. '+t.cedula+' · '+t.cargo+'</div>'+
+            '<div style="font-size:11px;color:var(--t3);margin-top:2px">'+
+              'Dias: <strong>'+r.dias+'</strong> · Acum: <strong>$'+r.pago.toFixed(2)+'</strong> · '+
+              (marcadoHoy&&!esJustif
+                ?'<span style="color:var(--v);font-weight:700">Presente hoy</span>'
+                :esJustif
+                  ?'<span style="color:var(--a);font-weight:700">Justificado</span>'
+                  :'<span style="color:var(--r);font-weight:700">⚠ No marcado</span>')+
+            '</div>'+
+          '</div>'+
+        '</div>';
+      }).join('')+
+    '</div>';
   });
   if(!pa.length)workersByArea+='<div class="empty">Sin trabajadores activos</div>';
-  // Ultimas marcaciones
-  const ultimas=[...CACHE.asistencias].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,10);
-  let ultimasHtml='<div class="card"><div class="stit" style="margin-bottom:10px">🕐 Últimas marcaciones</div>'+
-  (ultimas.length?ultimas.map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12px"><div><strong>'+t.nombres+'</strong><div style="color:var(--t3)">'+fmtF(a.fecha)+' · '+t.area+(c.atrasoH>0?' · <span style="color:var(--r)">atraso '+c.atrasoH+'h</span>':'')+'</div></div><strong style="color:var(--v)">$'+c.pago.toFixed(2)+'</strong></div>';}).join(''):'<div class="empty" style="padding:12px">Sin registros</div>')+
+
+  // ── Ultimas marcaciones ──
+  var ultimas=[...CACHE.asistencias].sort(function(a,b){return b.fecha.localeCompare(a.fecha);}).slice(0,10);
+  var ultimasHtml='<div class="card"><div class="stit" style="margin-bottom:10px">Ultimas marcaciones</div>'+
+    (ultimas.length?ultimas.map(function(a){
+      var t=CACHE.trabajadores.find(function(x){return x.id===a.tId;});
+      if(!t)return'';
+      var c=calcP(a.fecha,a.entrada,a.salida,a.feriado);
+      var esJustif=a.justificado;
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12px">'+
+        '<div><strong>'+t.nombres+'</strong>'+
+        '<div style="color:var(--t3)">'+fmtF(a.fecha)+' · '+t.area+(esJustif?' · <span style="color:var(--a)">Justificado</span>':c.atrasoH>0?' · <span style="color:var(--r)">atraso '+c.atrasoH+'h</span>':'')+'</div></div>'+
+        '<strong style="color:'+(esJustif?'var(--a)':'var(--v)')+'">'+( esJustif?'Justif.':'$'+c.pago.toFixed(2))+'</strong>'+
+      '</div>';
+    }).join(''):'<div class="empty" style="padding:12px">Sin registros</div>')+
   '</div>';
-  pg('sv_vista','<div class="stit" style="margin-bottom:12px">📊 Vista general</div>'+stats+marcHoyHtml+workersByArea+ultimasHtml);
+
+  pg('sv_vista',
+    '<div class="stit" style="margin-bottom:12px">Vista general</div>'+
+    alertaHtml+stats+marcHoyHtml+workersByArea+ultimasHtml);
 }
 function rSVP(){
   pg('sv_periodos','<div class="shdr"><div class="stit">Periodos autorizados</div><button class="btn bg bsm" onclick="mPer(null)">+ Nuevo</button></div>'+
@@ -723,8 +808,127 @@ window.genInf=function(){
   if(!fi.length){document.getElementById('inf-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
   const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
   const per=d1.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'})+' al '+d2.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('inf-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nomina mensual</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="8" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button class="btn bb" onclick="impr(\'nomina\',\''+desde+'\',\''+hasta+'\',\''+area+'\')">Imprimir nomina</button>';
+  document.getElementById('inf-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nomina mensual</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Faltas</th><th>Justif.</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="10" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button class="btn bb" onclick="impr(\'nomina\',\''+desde+'\',\''+hasta+'\',\''+area+'\')">Imprimir nomina</button>';
 };
+
+// JEFE RRHH - FALTAS / AUSENCIAS
+// Muestra dias en que un trabajador activo NO fue marcado, con opcion de justificar
+let fF='',fH='',fArea='';
+function rFaltas(){
+  var n=new Date();
+  if(!fF)fF=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);
+  if(!fH)fH=hoy();
+  pg('faltas',
+    '<div class="stit" style="margin-bottom:12px">Faltas y ausencias</div>'+
+    '<div class="card">'+
+      '<div class="fg fg2" style="margin-bottom:10px">'+
+        '<div class="field"><label>Desde</label><input type="date" id="ff" value="'+fF+'" onchange="fF=this.value"></div>'+
+        '<div class="field"><label>Hasta</label><input type="date" id="fh" value="'+fH+'" onchange="fH=this.value"></div>'+
+      '</div>'+
+      '<div class="field" style="margin-bottom:12px"><label>Area</label>'+
+        '<select id="farea" onchange="fArea=this.value"><option value="">Todas las areas</option>'+selOpts(AREAS,fArea)+'</select>'+
+      '</div>'+
+      '<button class="btn bg bfull" onclick="genFaltas()">Ver faltas</button>'+
+    '</div>'+
+    '<div id="faltas-res"></div>');
+}
+window.genFaltas=function(){
+  fF=document.getElementById('ff').value;
+  fH=document.getElementById('fh').value;
+  fArea=document.getElementById('farea').value;
+  // Generar lista de dias laborables en el rango
+  var dias=[];
+  var cur=new Date(fF+'T12:00:00');
+  var fin=new Date(fH+'T12:00:00');
+  while(cur<=fin){
+    dias.push(cur.toISOString().slice(0,10));
+    cur.setDate(cur.getDate()+1);
+  }
+  // Trabajadores activos (y algunos inactivos que estuvieron activos en el periodo)
+  var trabjs=CACHE.trabajadores.filter(function(t){
+    return !fArea||t.area===fArea;
+  }).filter(function(t){
+    return t.estado==='activo'||t.estado==='baja'||t.estado==='contrato';
+  });
+  // Para cada trabajador, calcular dias que debio trabajar vs dias marcados
+  var resultado=[];
+  trabjs.forEach(function(t){
+    var ingreso=t.fechaIngreso||'2000-01-01';
+    var baja=t.fechaBaja||'9999-12-31';
+    var diasDebio=dias.filter(function(d){return d>=ingreso&&d<=baja;});
+    var diasMarcados=CACHE.asistencias.filter(function(a){return a.tId===t.id&&a.fecha>=fF&&a.fecha<=fH;}).map(function(a){return a.fecha;});
+    var faltasDias=diasDebio.filter(function(d){return diasMarcados.indexOf(d)<0;});
+    if(faltasDias.length>0){
+      resultado.push({t:t,faltas:faltasDias,marcados:diasMarcados.length,debio:diasDebio.length});
+    }
+  });
+  var el=document.getElementById('faltas-res');
+  if(!resultado.length){
+    el.innerHTML='<div class="empty" style="margin-top:12px">Sin faltas en el periodo seleccionado</div>';
+    return;
+  }
+  var totalFaltas=resultado.reduce(function(s,r){return s+r.faltas.length;},0);
+  el.innerHTML=
+    '<div style="background:#fef3e2;border:1px solid #f5d89a;border-radius:10px;padding:12px 14px;margin:12px 0;display:flex;justify-content:space-between;align-items:center">'+
+      '<span style="font-weight:700;color:#7d4e00">'+resultado.length+' trabajador'+(resultado.length!==1?'es':'')+' con faltas</span>'+
+      '<span style="font-size:18px;font-weight:800;color:#7d4e00">'+totalFaltas+' dia'+(totalFaltas!==1?'s':'')+' total</span>'+
+    '</div>'+
+    resultado.map(function(r){
+      var rowsFaltas=r.faltas.slice(0,10).map(function(d){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f9f0e0">'+
+          '<span style="font-size:12px;color:#7d4e00">'+fmtF(d)+'</span>'+
+          '<button class="btn bo bsm" style="font-size:11px;padding:4px 10px" data-tid="'+r.t.id+'" data-fecha="'+d+'" onclick="mJustif(this.dataset.tid,this.dataset.fecha)">Justificar</button>'+
+        '</div>';
+      }).join('');
+      var masStr=r.faltas.length>10?'<div style="font-size:11px;color:var(--t3);padding:4px 0">...y '+(r.faltas.length-10)+' dia'+(r.faltas.length-10!==1?'s':'')+' más</div>':'';
+      return '<div class="card" style="margin-bottom:10px;border-color:#f5d89a">'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+          '<div class="av av-r" style="width:36px;height:36px;font-size:12px">'+inic(r.t.nombres)+'</div>'+
+          '<div style="flex:1">'+
+            '<div style="font-weight:700;font-size:13px">'+r.t.nombres+'</div>'+
+            '<div style="font-size:11px;color:var(--t2)">'+r.t.area+' · Marcados: '+r.marcados+' · Faltas: <strong style="color:var(--r)">'+r.faltas.length+'</strong></div>'+
+          '</div>'+
+        '</div>'+
+        rowsFaltas+masStr+
+      '</div>';
+    }).join('');
+};
+window.mJustif=function(tId,fecha){
+  var t=CACHE.trabajadores.find(function(x){return x.id===tId;});
+  window._justifId=tId;window._justifFecha=fecha;
+  openModal('Justificar falta',
+    '<p style="font-weight:700;margin-bottom:4px">'+t.nombres+'</p>'+
+    '<p style="font-size:12px;color:var(--t2);margin-bottom:12px">'+fmtF(fecha)+'</p>'+
+    '<div class="field" style="margin-bottom:10px"><label>Tipo de ausencia</label>'+
+      '<select id="jTipo">'+
+        '<option>Enfermedad</option>'+
+        '<option>Permiso personal</option>'+
+        '<option>Permiso autorizado</option>'+
+        '<option>Calamidad domestica</option>'+
+        '<option>Abandono sin aviso</option>'+
+        '<option>Otro</option>'+
+      '</select>'+
+    '</div>'+
+    '<div class="field" style="margin-bottom:14px"><label>Observacion</label>'+
+      '<textarea id="jObs" placeholder="Detalle adicional..."></textarea>'+
+    '</div>'+
+    '<div class="brow" style="justify-content:flex-end">'+
+      '<button class="btn bgr" onclick="closeModal()">Cancelar</button>'+
+      '<button class="btn bo" onclick="confJustif()">Registrar justificacion</button>'+
+    '</div>');
+};
+window.confJustif=async function(){
+  var tId=window._justifId,fecha=window._justifFecha;
+  if(!tId||!fecha)return;
+  var tipo=document.getElementById('jTipo').value;
+  var obs=document.getElementById('jObs').value;
+  // Guardar como asistencia con entrada/salida especial y obs de justificacion
+  await fadd('asistencias',{tId:tId,fecha:fecha,entrada:'00:00',salida:'00:00',feriado:false,obs:'[JUSTIF:'+tipo+'] '+obs,justificado:true});
+  window._justifId=null;window._justifFecha=null;
+  closeModal();
+  toast('Justificacion registrada correctamente');
+};
+
 function rTrans(){
   const n=new Date();if(!iD)iD=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);if(!iH)iH=hoy();
   pg('transferencias','<div class="stit" style="margin-bottom:12px">Detalle para transferencias</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="td" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="th2" value="'+iH+'" onchange="iH=this.value"></div></div><button class="btn bg bfull" onclick="genTrans()">Generar detalle</button></div><div id="trans-res"></div>');
