@@ -1375,11 +1375,16 @@ window.updA=function(tId,eFin){
 };
 
 window.guardAdmin=async function(){
+  alert('Ejecutando guardAdmin - DEBUG');
   var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo'&&t.area==='ADMINISTRACION';});
   var btns=document.querySelectorAll('[onclick="guardAdmin()"]');
   btns.forEach(function(b){b.disabled=true;b.textContent='Guardando...';});
   try{
+    console.log('DEBUG guardAdmin - Trabajadores ADMIN activos:', act.length);
+    console.log('DEBUG guardAdmin - aMap:', aMap);
+    
     var registros=act.filter(function(t){return aMap[t.id]&&aMap[t.id].presente;}).map(function(t){
+      console.log('DEBUG guardAdmin - Procesando trabajador:', t.nombres, 'presente:', aMap[t.id]?.presente);
       return{
         tId:t.id,fecha:aFecha,
         entrada:document.getElementById('aent-'+t.id)?.value||aMap[t.id].entrada,
@@ -1388,8 +1393,19 @@ window.guardAdmin=async function(){
         obs:document.getElementById('aobs-'+t.id)?.value||''
       };
     });
-    await Promise.all(CACHE.asistencias.filter(function(a){return a.fecha===aFecha&&act.find(function(t){return t.id===a.tId;});}).map(function(a){return fdel('asistencias',a.id);}));
+    
+    console.log('DEBUG guardAdmin - Registros a guardar:', registros.length);
+    console.log('DEBUG guardAdmin - Registros:', registros);
+    
+    // Borrar registros existentes
+    var existentes = CACHE.asistencias.filter(function(a){return a.fecha===aFecha&&act.find(function(t){return t.id===a.tId});});
+    console.log('DEBUG guardAdmin - Registros existentes a borrar:', existentes.length);
+    await Promise.all(existentes.map(function(a){return fdel('asistencias',a.id);}));
+    
+    // Guardar nuevos registros
+    console.log('DEBUG guardAdmin - Guardando registros en Firebase...');
     await Promise.all(registros.map(function(r){return fadd('asistencias',r);}));
+    console.log('DEBUG guardAdmin - Registros guardados exitosamente');
     registros.forEach(function(r){aMap[r.tId]={presente:true,entrada:r.entrada,salida:r.salida,feriado:r.feriado,obs:r.obs};});
     aFechaLoaded=aFecha;
     toast('Marcacion admin guardada: '+registros.length+' persona'+(registros.length!==1?'s':''));
