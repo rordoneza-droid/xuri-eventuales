@@ -4,50 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#1a5c32">
-<title>XURI S.A.</title>
+<title>XURI S.A. - Control</title>
 <style>
-:root{--v:#1a5c32;--vc:#e8f3e8;--r:#c0392b;--a:#d4860b;--az:#1a6fa3;--bg:#f4f6f4;--bd:#dde5dd;--w:#fff;--tx:#1a1a1a;--t2:#5a7a5a;--t3:#9aaa9a}
+:root{--v:#1a5c32;--vc:#e8f3e8;--r:#c0392b;--a:#d4860b;--bg:#f4f6f4;--bd:#dde5dd;--w:#fff;--tx:#1a1a1a;--t2:#5a7a5a;--t3:#9aaa9a}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:15px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-#loader{position:fixed;inset:0;background:var(--v);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;gap:14px}
-.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#loader{position:fixed;inset:0;background:var(--v);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff}
+.spin{width:30px;height:30px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;opacity:0;transition:.3s;z-index:9999}
-#toast.show{opacity:1}#toast.ok{background:var(--v)}#toast.err{background:var(--r)}
+#toast.show{opacity:1}#toast.ok{background:var(--v)}
 #login{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:100}
-.lcard{background:var(--w);border-radius:20px;border:1px solid var(--bd);padding:28px;width:100%;max-width:360px}
-.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-.rbtn{padding:12px;border-radius:12px;border:2px solid var(--bd);background:#fafcfa;cursor:pointer;text-align:center}
-.rbtn.sel{border-color:var(--v);background:var(--vc)}
-.pinw{display:flex;flex-direction:column;gap:10px;position:relative}
-.pinw input{padding:12px 14px;border:1.5px solid var(--bd);border-radius:10px;font-size:16px}
+.lcard{background:var(--w);border-radius:20px;border:1px solid var(--bd);padding:25px;width:100%;max-width:360px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.rbtn{padding:12px;border-radius:12px;border:2px solid var(--bd);background:#fff;cursor:pointer;font-weight:700;color:var(--t2)}
+.rbtn.sel{border-color:var(--v);background:var(--vc);color:var(--v)}
+.pinw{display:flex;flex-direction:column;gap:12px}
+.pinw input{padding:12px;border:1.5px solid var(--bd);border-radius:10px;font-size:16px;width:100%}
 #app{display:none;height:100%;flex-direction:column}
 #app.show{display:flex}
-.hdr{background:var(--v);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
-.hrol{font-size:11px;background:rgba(255,255,255,.2);padding:4px 10px;border-radius:99px;text-transform:uppercase}
+.hdr{background:var(--v);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.hrol{font-size:10px;background:rgba(255,255,255,.2);padding:3px 8px;border-radius:99px;text-transform:uppercase}
 .bnav{display:flex;background:var(--w);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
-.btab{flex:1;padding:12px;border:none;background:none;font-size:11px;font-weight:700;color:var(--t3);cursor:pointer}
+.btab{flex:1;padding:15px 5px;border:none;background:none;font-size:11px;font-weight:700;color:var(--t3);cursor:pointer}
 .btab.act{color:var(--v);border-top:3px solid var(--v)}
 .pages{flex:1;overflow-y:auto;padding:15px}
 .page{display:none}.page.show{display:block}
-.wcard{background:var(--w);border-radius:12px;border:1px solid var(--bd);padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
-.av{width:40px;height:40px;border-radius:50%;background:var(--vc);color:var(--v);display:flex;align-items:center;justify-content:center;font-weight:800}
-.mcard{background:var(--w);border-radius:12px;border:1px solid var(--bd);padding:14px;margin-bottom:10px}
-.mcard.pre{border-left:5px solid var(--v)}
-.mdet{display:none;margin-top:10px;grid-template-columns:1fr 1fr 80px;gap:8px;align-items:end}
+.wcard{background:var(--w);border-radius:12px;border:1px solid var(--bd);padding:12px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.av{width:38px;height:38px;border-radius:50%;background:var(--vc);color:var(--v);display:flex;align-items:center;justify-content:center;font-weight:800}
+.mcard{background:var(--w);border-radius:12px;border:1px solid var(--bd);padding:12px;margin-bottom:10px}
+.mcard.pre{border-left:4px solid var(--v);background:#f9fff9}
+.mdet{display:none;margin-top:10px;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end}
 .mdet.show{display:grid}
-.btn{padding:10px;border-radius:8px;border:none;font-weight:700;cursor:pointer;font-size:13px}
-.bg{background:var(--v);color:#fff}.bgr{background:#eee;color:#444}.bfull{width:100%;margin-top:10px}
-.field label{display:block;font-size:10px;font-weight:700;margin-bottom:4px;color:var(--t2)}
-.field input{width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px}
-.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:20px}
+.btn{padding:12px;border-radius:8px;border:none;font-weight:700;cursor:pointer;transition:0.2s}
+.bg{background:var(--v);color:#fff}.bgr{background:#eee;color:#444}.bfull{width:100%}
+.field label{display:block;font-size:10px;font-weight:700;margin-bottom:4px;color:var(--t2);text-transform:uppercase}
+.field input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;font-size:14px}
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;padding:20px}
 .mbg.show{display:flex}
-.msheet{background:var(--w);border-radius:15px;padding:20px;width:100%;max-width:400px}
+.msheet{background:var(--w);border-radius:15px;padding:20px;width:100%;max-width:400px;position:relative}
 </style>
 </head>
 <body>
 
-<div id="loader"><div class="spin"></div><h2>XURI S.A.</h2></div>
+<div id="loader"><div class="spin"></div><h2 style="margin-top:10px">XURI S.A.</h2></div>
 <div id="toast"></div>
 
 <div id="login">
@@ -55,18 +55,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   <h2 style="text-align:center;margin-bottom:20px;color:var(--v)">Eventuales</h2>
   <div class="rgrid">
     <button class="rbtn sel" onclick="selRol('asistente',this)">RRHH</button>
-    <button class="rbtn" onclick="selRol('bodega',this)">Bodega</button>
-    <button class="rbtn" onclick="selRol('supervisor',this)">Supervisor</button>
-    <button class="rbtn" onclick="selRol('jefe',this)">Jefe</button>
+    <button class="rbtn" onclick="selRol('bodega',this)">BODEGA</button>
+    <button class="rbtn" onclick="selRol('supervisor',this)">SUPERV.</button>
+    <button class="rbtn" onclick="selRol('jefe',this)">JEFE</button>
   </div>
   <div class="pinw">
     <div style="position:relative">
-      <input type="password" id="pin" placeholder="Contraseña" style="width:100%">
-      <button onclick="togPin()" style="position:absolute;right:10px;top:12px;border:none;background:none">👁️</button>
+      <input type="password" id="pin" placeholder="Contraseña">
+      <button onclick="togPin()" style="position:absolute;right:12px;top:12px;border:none;background:none;font-size:18px;cursor:pointer">👁️</button>
     </div>
-    <button class="btn bg" onclick="login()">INGRESAR</button>
+    <button class="btn bg" onclick="login()">INGRESAR AL SISTEMA</button>
   </div>
-  <p id="lerr" style="color:var(--r);font-size:12px;display:none;text-align:center;margin-top:10px">Contraseña incorrecta</p>
+  <p id="lerr" style="color:var(--r);font-size:12px;display:none;text-align:center;margin-top:15px;font-weight:bold">Contraseña incorrecta</p>
 </div>
 </div>
 
@@ -75,7 +75,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div><strong>XURI S.A.</strong></div>
     <div style="display:flex;align-items:center;gap:10px">
       <span id="hrol" class="hrol"></span>
-      <button onclick="location.reload()" style="background:none;border:none;color:#fff;font-weight:bold;cursor:pointer">Salir</button>
+      <button onclick="location.reload()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:5px 10px;border-radius:5px;font-size:11px;cursor:pointer">Salir</button>
     </div>
   </div>
   <div class="pages" id="pages"></div>
@@ -83,7 +83,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 <div class="mbg" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="msheet"><h3 id="mtitle"></h3><div id="mbody" style="margin-top:15px"></div></div>
+  <div class="msheet"><h3 id="mtitle" style="color:var(--v)"></h3><div id="mbody" style="margin-top:15px"></div></div>
 </div>
 
 <script type="module">
@@ -100,19 +100,19 @@ let ROL=null, rolSel='asistente', tabAct='', mFecha=new Date().toISOString().sli
 
 window.togPin=()=>{const i=document.getElementById('pin'); i.type=i.type==='password'?'text':'password'};
 window.selRol=(r,b)=>{rolSel=r; document.querySelectorAll('.rbtn').forEach(x=>x.classList.remove('sel')); b.classList.add('sel')};
-window.toast=(m,t='ok')=>{const e=document.getElementById('toast');e.textContent=m;e.className='show '+t;setTimeout(()=>e.className='',2000)};
+window.toast=(m)=>{const e=document.getElementById('toast');e.textContent=m;e.className='show ok';setTimeout(()=>e.className='',2000)};
 
 window.login=()=>{
   if(document.getElementById('pin').value===CLAVES[rolSel]){
     ROL=rolSel; document.getElementById('login').style.display='none'; document.getElementById('app').classList.add('show');
     document.getElementById('hrol').textContent=ROL; initApp();
-  }else document.getElementById('lerr').style.display='block';
+  }else{ document.getElementById('lerr').style.display='block'; }
 };
 
 const NAVS={
   asistente:[{id:'t',l:'Personal'},{id:'n',l:'Lista Negra'}],
   bodega:[{id:'m',l:'Marcación'},{id:'h',l:'Historial'}],
-  supervisor:[{id:'v',l:'Vista Personal'}],
+  supervisor:[{id:'v',l:'Vista General'}],
   jefe:[{id:'i',l:'Informes'},{id:'p',l:'Personal'}]
 };
 
@@ -127,48 +127,55 @@ window.setTab=id=>{
   tabAct=id;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
   document.querySelectorAll('.btab').forEach(b=>b.classList.remove('act'));
-  const targetPage = document.getElementById('pg-'+id);
-  if(targetPage){ targetPage.classList.add('show'); document.getElementById('bt-'+id).classList.add('act'); render(); }
+  const target=document.getElementById('pg-'+id);
+  if(target){ target.classList.add('show'); document.getElementById('bt-'+id).classList.add('act'); render(); }
 };
 
 function render(){
-  const p=document.getElementById('pg-'+tabAct); if(!p)return;
+  const p=document.getElementById('pg-'+tabAct); if(!p) return;
   if(tabAct==='t'||tabAct==='p') p.innerHTML=renderT();
-  if(tabAct==='m') p.innerHTML=renderM();
-  if(tabAct==='v') p.innerHTML=renderV();
-  if(tabAct==='i') p.innerHTML=renderI();
+  else if(tabAct==='m') p.innerHTML=renderM();
+  else if(tabAct==='v') p.innerHTML=renderV();
+  else if(tabAct==='i') p.innerHTML=renderI();
+  else p.innerHTML=`<div style="text-align:center;padding:40px;color:#999">Próximamente...</div>`;
 }
 
 function renderT(){
-  return `<button class="btn bg bfull" onclick="mTrab()">+ NUEVO TRABAJADOR</button><br><br>` +
-  CACHE.trabajadores.map(t=>`<div class="wcard"><div class="av">${t.nombres[0]}</div><div style="flex:1"><strong>${t.nombres}</strong><br><small>${t.cedula} | ${t.area}</small></div><button class="btn bgr" onclick="mTrab('${t.id}')">Editar</button></div>`).join('');
+  let html=`<button class="btn bg bfull" onclick="mTrab()">+ NUEVO TRABAJADOR</button><br><br>`;
+  if(CACHE.trabajadores.length===0) html+=`<p style="text-align:center;color:#999">No hay personal registrado</p>`;
+  html += CACHE.trabajadores.map(t=>`<div class="wcard"><div class="av">${t.nombres[0].toUpperCase()}</div><div style="flex:1"><strong>${t.nombres}</strong><br><small>${t.cedula} | ${t.area}</small></div><button class="btn bgr" onclick="mTrab('${t.id}')">Editar</button></div>`).join('');
+  return html;
 }
 
 function renderM(){
-  return `<div class="card"><div class="field"><label>FECHA DE REGISTRO</label><input type="date" value="${mFecha}" onchange="mFecha=this.value;render()"></div></div>` +
-  CACHE.trabajadores.map(t=>{
+  let html = `<div class="card"><div class="field"><label>FECHA DE MARCACIÓN</label><input type="date" value="${mFecha}" onchange="mFecha=this.value;render()"></div></div>`;
+  if(CACHE.trabajadores.length===0) html+=`<p style="text-align:center;color:#999">No hay personal activo para marcar</p>`;
+  html += CACHE.trabajadores.map(t=>{
     const a=CACHE.asistencias.find(x=>x.tId===t.id && x.fecha===mFecha)||{e:'08:00',s:'18:00',f:false};
     return `<div class="mcard ${a.id?'pre':''}">
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="checkbox" style="width:20px;height:20px" ${a.id?'checked':''} onchange="togM('${t.id}')">
-        <strong>${t.nombres}</strong>
+      <div style="display:flex;align-items:center;gap:12px">
+        <input type="checkbox" style="width:22px;height:22px;accent-color:var(--v)" ${a.id?'checked':''} onchange="togM('${t.id}')">
+        <div style="flex:1"><strong>${t.nombres}</strong><br><small style="color:var(--t3)">${t.area}</small></div>
+        ${a.id?'<span style="color:var(--v);font-weight:bold">$20.00</span>':''}
       </div>
       <div class="mdet ${a.id?'show':''}" id="det-${t.id}">
         <div class="field"><label>Entrada</label><input type="time" id="e-${t.id}" value="${a.e}"></div>
         <div class="field"><label>Salida</label><input type="time" id="s-${t.id}" value="${a.s}"></div>
-        <div class="field" style="display:flex;align-items:center;gap:5px;padding-bottom:5px"><input type="checkbox" id="f-${t.id}" ${a.f?'checked':''}> <label style="margin:0">Feriado</label></div>
+        <div class="field" style="display:flex;align-items:center;gap:5px;justify-content:center"><input type="checkbox" id="f-${t.id}" ${a.f?'checked':''}> <label style="margin:0">Feriado</label></div>
       </div>
     </div>`;
-  }).join('') + `<button class="btn bg bfull" onclick="saveM()">GUARDAR MARCACIÓN</button>`;
+  }).join('');
+  html += `<br><button class="btn bg bfull" onclick="saveM()" style="margin-bottom:30px">GUARDAR ASISTENCIA DEL DÍA</button>`;
+  return html;
 }
 
 function renderV(){
-  return `<h3>Lista de Personal Activo</h3><br>` + 
+  return `<h3>Personal en Sistema</h3><br>` + 
   CACHE.trabajadores.map(t=>`<div class="wcard"><div><strong>${t.nombres}</strong><br><small>C.I: ${t.cedula} - Área: ${t.area}</small></div></div>`).join('');
 }
 
 function renderI(){
-  return `<div class="card"><h4>Generar Reporte de Pagos</h4><div class="field"><label>Desde</label><input type="date" id="inf-d"></div><div class="field"><label>Hasta</label><input type="date" id="inf-h"></div><button class="btn bg bfull" onclick="genInf()">Ver Informe</button></div><div id="res-i"></div>`;
+  return `<div class="card"><h4>Reporte de Jornadas</h4><br><div class="field"><label>Desde</label><input type="date" id="inf-d"></div><br><div class="field"><label>Hasta</label><input type="date" id="inf-h"></div><br><button class="btn bg bfull" onclick="genInf()">Generar Vista</button></div><div id="res-i"></div>`;
 }
 
 window.togM=id=>{ const d=document.getElementById('det-'+id); d.classList.toggle('show'); };
@@ -183,23 +190,25 @@ window.saveM=async()=>{
       if(ex) await updateDoc(doc(db,'asistencias',ex.id),data); else await addDoc(COL.asistencias(),data);
     }
   }
-  toast('Asistencia guardada'); render();
+  toast('Marcaciones guardadas correctamente'); render();
 };
 
 window.mTrab=(id)=>{
   const t=id?CACHE.trabajadores.find(x=>x.id===id):{nombres:'',cedula:'',area:'BODEGA'};
-  openModal(id?'Editar Personal':'Nuevo Personal', `
-    <div class="field"><label>Nombre Completo</label><input id="tn" value="${t.nombres}"></div><br>
-    <div class="field"><label>Cédula</label><input id="tc" value="${t.cedula}"></div><br>
-    <div class="field"><label>Área</label><input id="ta" value="${t.area}"></div><br>
-    <button class="btn bg bfull" onclick="saveT('${id||''}')">GUARDAR</button>
+  openModal(id?'Editar Datos':'Registrar Eventual', `
+    <div class="field"><label>Nombres Completos</label><input id="tn" value="${t.nombres}"></div><br>
+    <div class="field"><label>Número de Cédula</label><input id="tc" value="${t.cedula}"></div><br>
+    <div class="field"><label>Área de Trabajo</label><input id="ta" value="${t.area}"></div><br>
+    <button class="btn bg bfull" onclick="saveT('${id||''}')">GUARDAR INFORMACIÓN</button>
   `);
 };
 
 window.saveT=async(id)=>{
-  const d={nombres:document.getElementById('tn').value,cedula:document.getElementById('tc').value,area:document.getElementById('ta').value,estado:'activo',_ts:serverTimestamp()};
+  const n=document.getElementById('tn').value, c=document.getElementById('tc').value, a=document.getElementById('ta').value;
+  if(!n||!c) return alert('Nombre y Cédula requeridos');
+  const d={nombres:n,cedula:c,area:a,estado:'activo',_ts:serverTimestamp()};
   if(id) await updateDoc(doc(db,'trabajadores',id),d); else await addDoc(COL.trabajadores(),d);
-  closeModal(); toast('Éxito'); render();
+  closeModal(); toast('Datos guardados'); render();
 };
 
 window.openModal=(t,b)=>{document.getElementById('mtitle').textContent=t;document.getElementById('mbody').innerHTML=b;document.getElementById('modal').classList.add('show')};
