@@ -939,8 +939,168 @@ window.gPer=gPer;
 let iD='',iH='',iA='';
 function rNomina(){
   const n=new Date();if(!iD)iD=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);if(!iH)iH=hoy();
-  pg('nomina','<div class="stit" style="margin-bottom:12px">Generar nómina de pago</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="id" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="ih" value="'+iH+'" onchange="iH=this.value"></div></div><div class="field" style="margin-bottom:12px"><label>Area</label><select id="ia" onchange="iA=this.value"><option value="">Todas las areas (Nómina junta)</option>'+selOpts(AREAS,iA)+'</select></div><button class="btn bg bfull" onclick="genNomina()">Generar nómina</button></div><div id="nom-res"></div>');
+  pg('nomina','<div class="stit" style="margin-bottom:12px">Cálculo de nómina sencillo</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="id" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="ih" value="'+iH+'" onchange="iH=this.value"></div></div><div class="field" style="margin-bottom:12px"><label>Area</label><select id="ia" onchange="iA=this.value"><option value="">Todas las areas (Nómina junta)</option>'+selOpts(AREAS,iA)+'</select></div></div><div class="brow" style="gap:8px"><button class="btn bg" style="flex:1" onclick="genNomina()">Generar informe automático</button><button class="btn ba" style="flex:1" onclick="rNominaManual()">Cálculo manual</button></div></div><div id="nom-res"></div><div id="nom-manual" style="display:none;margin-top:20px"><div class="card"><div class="stit" style="margin-bottom:12px">Agregar trabajador manualmente</div><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Nombre</label><input type="text" id="mn-nombre" placeholder="Nombre del trabajador"></div><div class="field"><label>Cédula</label><input type="text" id="mn-cedula" placeholder="Cédula"></div><div class="field"><label>Cargo</label><input type="text" id="mn-cargo" placeholder="Cargo"></div><div class="field"><label>Área</label><select id="mn-area"><option value="ADMINISTRACION">Administración</option><option value="BODEGA">Bodega</option></select></div><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Sueldo mensual</label><input type="number" id="mn-sueldo" placeholder="Ej: 482"></div><div class="field"><label>Valor diario</label><input type="number" id="mn-diario" placeholder="Ej: 16.06" step="0.01"></div><div class="field"><label>Días trabajados</label><input type="number" id="mn-dias" placeholder="Ej: 15" min="0"></div><div class="field"><label>Días bono (fin de semana)</label><input type="number" id="mn-bono" placeholder="Ej: 4" min="0"></div></div><div class="field" style="margin-bottom:12px"><label>Observaciones</label><input type="text" id="mn-obs" placeholder="Observaciones"></div></div><button class="btn bg bfull" onclick="agregarTrabajadorManual()">Agregar a nómina</button></div></div><div id="nom-manual-res"></div></div>');
 }
+window.rNominaManual=function(){
+  document.getElementById('nom-manual').style.display='block';
+};
+
+window.agregarTrabajadorManual=function(){
+  const nombre=document.getElementById('mn-nombre').value;
+  const cedula=document.getElementById('mn-cedula').value;
+  const cargo=document.getElementById('mn-cargo').value;
+  const area=document.getElementById('mn-area').value;
+  const sueldo=parseFloat(document.getElementById('mn-sueldo').value)||0;
+  const diario=parseFloat(document.getElementById('mn-diario').value)||0;
+  const dias=parseFloat(document.getElementById('mn-dias').value)||0;
+  const bono=parseFloat(document.getElementById('mn-bono').value)||0;
+  const obs=document.getElementById('mn-obs').value;
+  
+  if(!nombre||!cedula||!cargo||!area){
+    toast('Complete todos los campos obligatorios','err');
+    return;
+  }
+  
+  const valorDiario=diario||(sueldo/30);
+  const pagoNormal=dias*valorDiario;
+  const pagoBono=bono*valorDiario;
+  const total=pagoNormal+pagoBono;
+  
+  const trabajador={
+    nombre,cedula,cargo,area,
+    sueldo,diario:valorDiario,dias,bono,
+    pagoNormal,pagoBono,total,obs
+  };
+  
+  // Agregar a la lista de nómina manual
+  if(!window.nominaManual)window.nominaManual=[];
+  window.nominaManual.push(trabajador);
+  
+  // Mostrar en la tabla
+  const tablaHtml=window.nominaManual.map((t,i)=>`
+    <tr>
+      <td class="tc">${i+1}</td>
+      <td><strong>${t.nombre}</strong></td>
+      <td style="font-family:monospace;font-size:11px">${t.cedula}</td>
+      <td style="font-size:11px">${t.cargo}</td>
+      <td><span class="chip">${t.area}</span></td>
+      <td class="tr">$${t.diario.toFixed(2)}</td>
+      <td class="tc">${t.dias}</td>
+      <td class="tc">${t.bono}</td>
+      <td class="tr"><strong>$${t.total.toFixed(2)}</strong></td>
+      <td>${t.obs||'--'}</td>
+    </tr>
+  `).join('');
+  
+  const totalGeneral=window.nominaManual.reduce((sum,t)=>sum+t.total,0);
+  
+  document.getElementById('nom-manual-res').innerHTML=`
+    <div class="ihdr">
+      <div class="iemp">XURI S.A. - Nómina Manual</div>
+      <h3>Trabajadores Eventuales</h3>
+    </div>
+    <div class="iwrap">
+      <table>
+        <thead>
+          <tr>
+            <th>N</th><th>Nombre</th><th>Cédula</th><th>Cargo</th>
+            <th>Área</th><th>S.Diario</th><th>Días</th><th>Bono</th><th>Total</th><th>Obs</th>
+          </tr>
+        </thead>
+        <tbody>${tablaHtml}</tbody>
+        <tfoot>
+          <tr class="tot">
+            <td colspan="8" style="text-align:right;padding-right:12px">TOTALES</td>
+            <td class="tr"><strong>$${totalGeneral.toFixed(2)}</strong></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <button class="btn bb" onclick="imprimirNominaManual()">Imprimir nómina manual</button>
+  `;
+  
+  // Limpiar formulario
+  document.getElementById('mn-nombre').value='';
+  document.getElementById('mn-cedula').value='';
+  document.getElementById('mn-cargo').value='';
+  document.getElementById('mn-sueldo').value='';
+  document.getElementById('mn-diario').value='';
+  document.getElementById('mn-dias').value='';
+  document.getElementById('mn-bono').value='';
+  document.getElementById('mn-obs').value='';
+  
+  toast('Trabajador agregado a la nómina manual');
+};
+
+window.imprimirNominaManual=function(){
+  if(!window.nominaManual||window.nominaManual.length===0){
+    toast('No hay trabajadores en la nómina manual','err');
+    return;
+  }
+  
+  const totalGeneral=window.nominaManual.reduce((sum,t)=>sum+t.total,0);
+  const contenido=`
+    <div style="padding:20px;font-family:Arial;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <h1 style="color:var(--v);margin-bottom:5px;">XURI S.A.</h1>
+        <h2>NÓMINA DE PAGO - CÁLCULO MANUAL</h2>
+        <p style="color:var(--t2);margin:5px 0;">Fecha: ${new Date().toLocaleDateString('es-EC')}</p>
+      </div>
+      
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+        <thead>
+          <tr style="background:var(--v);color:white;">
+            <th style="padding:10px;border:1px solid #ddd;">N</th>
+            <th style="padding:10px;border:1px solid #ddd;">Nombre</th>
+            <th style="padding:10px;border:1px solid #ddd;">Cédula</th>
+            <th style="padding:10px;border:1px solid #ddd;">Cargo</th>
+            <th style="padding:10px;border:1px solid #ddd;">Área</th>
+            <th style="padding:10px;border:1px solid #ddd;">S. Diario</th>
+            <th style="padding:10px;border:1px solid #ddd;">Días</th>
+            <th style="padding:10px;border:1px solid #ddd;">Bono</th>
+            <th style="padding:10px;border:1px solid #ddd;">Total</th>
+            <th style="padding:10px;border:1px solid #ddd;">Obs</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${window.nominaManual.map(t=>`
+            <tr>
+              <td style="padding:8px;border:1px solid #ddd;text-align:center;">${window.nominaManual.indexOf(t)+1}</td>
+              <td style="padding:8px;border:1px solid #ddd;">${t.nombre}</td>
+              <td style="padding:8px;border:1px solid #ddd;font-family:monospace;">${t.cedula}</td>
+              <td style="padding:8px;border:1px solid #ddd;">${t.cargo}</td>
+              <td style="padding:8px;border:1px solid #ddd;">${t.area}</td>
+              <td style="padding:8px;border:1px solid #ddd;text-align:right;">$${t.diario.toFixed(2)}</td>
+              <td style="padding:8px;border:1px solid #ddd;text-align:center;">${t.dias}</td>
+              <td style="padding:8px;border:1px solid #ddd;text-align:center;">${t.bono}</td>
+              <td style="padding:8px;border:1px solid #ddd;text-align:right;font-weight:bold;">$${t.total.toFixed(2)}</td>
+              <td style="padding:8px;border:1px solid #ddd;">${t.obs||'--'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f0f0f0;font-weight:bold;">
+            <td colspan="7" style="padding:10px;border:1px solid #ddd;text-align:right;">TOTALES</td>
+            <td style="padding:10px;border:1px solid #ddd;text-align:right;">$${totalGeneral.toFixed(2)}</td>
+            <td colspan="2" style="padding:10px;border:1px solid #ddd;"></td>
+          </tr>
+        </tfoot>
+      </table>
+      
+      <div style="margin-top:30px;text-align:center;color:var(--t2);font-size:12px;">
+        <p>Documento generado el ${new Date().toLocaleDateString('es-EC')} a las ${new Date().toLocaleTimeString('es-EC')}</p>
+        <p>XURI S.A. - Sistema de Nómina</p>
+      </div>
+    </div>
+  `;
+  
+  const ventana=window.open('','_blank');
+  ventana.document.write(contenido);
+  ventana.document.close();
+  ventana.print();
+};
+
 window.genNomina=function(){
   const desde=document.getElementById('id').value,hasta=document.getElementById('ih').value,area=document.getElementById('ia').value;
   iD=desde;iH=hasta;iA=area;
@@ -1380,7 +1540,6 @@ window.updA=function(tId,eFin){
 };
 
 window.guardAdmin=async function(){
-  alert('Ejecutando guardAdmin - DEBUG');
   var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo'&&t.area==='ADMINISTRACION';});
   var btns=document.querySelectorAll('[onclick="guardAdmin()"]');
   btns.forEach(function(b){b.disabled=true;b.textContent='Guardando...';});
@@ -1414,8 +1573,10 @@ window.guardAdmin=async function(){
     registros.forEach(function(r){aMap[r.tId]={presente:true,entrada:r.entrada,salida:r.salida,feriado:r.feriado,obs:r.obs};});
     aFechaLoaded=aFecha;
     toast('Marcacion admin guardada: '+registros.length+' persona'+(registros.length!==1?'s':''));
-    // Forzar actualización del historial
-    if(tabActual==='hist_admin')rHistAdmin();
+    // Forzar actualización del historial con delay para asegurar que Firebase actualice
+    setTimeout(function(){
+      if(tabActual==='hist_admin')rHistAdmin();
+    }, 1000);
   }catch(e){toast('Error: '+e.message,'err');}
   finally{btns.forEach(function(b){b.disabled=false;b.innerHTML='&#x1F4BE; Guardar marcacion del dia';});}
 };
@@ -1497,7 +1658,10 @@ function rHistAdmin(){
   }
   // Resumen por persona con semana integral
   var resumenHtml=act.filter(function(t){return t.estado==='activo'||t.estado==='contrato';}).map(function(t){
-    var r=resTAdmin(t.id,t.sueldo||500,'2026-04-01',hoy());
+    // Usar rango dinámico: desde hace 30 días hasta hoy
+    var hace30 = new Date();
+    hace30.setDate(hace30.getDate() - 30);
+    var r=resTAdmin(t.id,t.sueldo||500,hace30.toISOString().slice(0,10),hoy());
     // Mostrar siempre los trabajadores activos, incluso si no tienen días trabajados
     return '<div style="background:var(--vc);border:1px solid #b8d8b8;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'+
       '<div>'+
