@@ -27,11 +27,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .llogo h1{font-size:26px;font-weight:800;color:var(--v);margin-top:4px}
 .llogo p{font-size:12px;color:var(--t3);margin-top:3px}
 .rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-.rbtn{padding:15px 6px;border-radius:12px;border:2px solid var(--bd);background:#fafcfa;cursor:pointer;text-align:center;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.15s}
+.rbtn{padding:13px 6px;border-radius:12px;border:2px solid var(--bd);background:#fafcfa;cursor:pointer;text-align:center;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.15s}
 .rbtn:active{transform:scale(.95)}
 .rbtn.sel{border-color:var(--v);background:var(--vc)}
-.rico{font-size:32px}.rlbl{font-size:11px;font-weight:700;color:var(--tx)}.rsub{font-size:10px;color:var(--t3)}
-.pinw{display:flex;gap:8px;margin-bottom:6px;position:relative}
+.rico{font-size:22px}.rlbl{font-size:11px;font-weight:700;color:var(--tx)}.rsub{font-size:10px;color:var(--t3)}
+.pinw{display:flex;gap:8px;margin-bottom:6px}
 .pinw input{flex:1;padding:12px 14px;border:1.5px solid var(--bd);border-radius:10px;font-size:16px;font-family:inherit;background:var(--w);color:var(--tx)}
 .pinw input:focus{outline:none;border-color:var(--v);box-shadow:0 0 0 3px rgba(26,92,50,.1)}
 .lerr{color:var(--r);font-size:12px;display:none;margin-top:4px}
@@ -103,7 +103,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .marea{font-size:11px;color:var(--t2)}
 .mdet{margin-top:12px;display:none;flex-direction:column;gap:8px}
 .mdet.show{display:flex}
-.mtimes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end}
+.mtimes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .mpago{font-size:16px;font-weight:800;color:var(--v)}
 .matr{font-size:12px;color:var(--r);font-weight:700}
 .ncard{background:var(--w);border-radius:12px;border:1.5px solid #fde8e4;padding:14px;margin-bottom:10px}
@@ -154,30 +154,26 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="lcard">
   <div class="llogo"><div class="emp">XURI S.A.</div><h1>Eventuales</h1><p>Control de trabajadores eventuales</p></div>
   <div class="rgrid">
-    <button type="button" class="rbtn sel" onclick="selRol('asistente',this)"><span class="rico">👩‍💼</span><span class="rlbl">Asistente RRHH</span><span class="rsub">Registra personas</span></button>
-    <button type="button" class="rbtn" onclick="selRol('bodega',this)"><span class="rico">📋</span><span class="rlbl">Jefe Bodega</span><span class="rsub">Marcacion diaria</span></button>
-    <button type="button" class="rbtn" onclick="selRol('supervisor',this)"><span class="rico">👁️</span><span class="rlbl">Supervisor</span><span class="rsub">Solo visualiza</span></button>
-    <button type="button" class="rbtn" onclick="selRol('jefe',this)"><span class="rico">📊</span><span class="rlbl">Jefe RRHH</span><span class="rsub">Informes y pagos</span></button>
+    <button class="rbtn sel" onclick="selRol('asistente',this)"><span class="rico">&#x1F469;&#x200D;&#x1F4BC;</span><span class="rlbl">Asistente RRHH</span><span class="rsub">Registra personas</span></button>
+    <button class="rbtn" onclick="selRol('bodega',this)"><span class="rico">&#x1F4CB;</span><span class="rlbl">Jefe Bodega</span><span class="rsub">Marcacion diaria</span></button>
+    <button class="rbtn" onclick="selRol('supervisor',this)"><span class="rico">&#x1F441;&#xFE0F;</span><span class="rlbl">Supervisor</span><span class="rsub">Solo visualiza</span></button>
+    <button class="rbtn" onclick="selRol('jefe',this)"><span class="rico">&#x1F4CA;</span><span class="rlbl">Jefe RRHH</span><span class="rsub">Informes y pagos</span></button>
   </div>
-  <div class="pinw">
-    <input type="password" id="pin" placeholder="Contrasena" onkeydown="if(event.key==='Enter')login()">
-    <button type="button" onclick="togPin()" style="position:absolute;right:85px;top:10px;background:none;border:none;font-size:18px;cursor:pointer;z-index:10">👁️</button>
-    <button type="button" class="btn bg" onclick="login()">Entrar</button>
-  </div>
+  <div class="pinw"><input type="password" id="pin" placeholder="Contrasena" onkeydown="if(event.key==='Enter')login()"><button class="btn bg" onclick="login()">Entrar</button></div>
   <div class="lerr" id="lerr">Contrasena incorrecta</div>
 </div>
 </div>
 <div id="app">
   <div class="hdr"><div class="hdri">
     <div class="hbrand"><span class="hemp">XURI S.A.</span><span class="hmod">Control de Eventuales</span></div>
-    <div class="hright"><span class="sdot" id="sdot"></span><span class="hrol" id="hrol"></span><button type="button" class="bout" onclick="logout()">Salir</button></div>
+    <div class="hright"><span class="sdot" id="sdot"></span><span class="hrol" id="hrol"></span><button class="bout" onclick="logout()">Salir</button></div>
   </div></div>
   <div class="pages" id="pages"></div>
   <nav class="bnav" id="bnav"></nav>
 </div>
 <div class="mbg" id="modal" onclick="if(event.target===this)closeModal()">
   <div class="msheet"><div class="mpull"></div>
-    <div class="mhdr"><h3 id="mtitle"></h3><button type="button" class="mclose" onclick="closeModal()">x</button></div>
+    <div class="mhdr"><h3 id="mtitle"></h3><button class="mclose" onclick="closeModal()">x</button></div>
     <div class="mbody" id="mbody"></div>
   </div>
 </div>
@@ -258,11 +254,10 @@ function login(){
 window.login=login;
 function logout(){ROL=null;tabActual='';document.getElementById('app').classList.remove('show');document.getElementById('login').style.display='flex';document.getElementById('pin').value='';}
 window.logout=logout;
-window.togPin=()=>{const i=document.getElementById('pin');i.type=i.type==='password'?'text':'password'};
 function initApp(){
   const mod=MODS[ROL];
   document.getElementById('pages').innerHTML=mod.tabs.map(t=>'<div class="page" id="pg-'+t.id+'"></div>').join('');
-  document.getElementById('bnav').innerHTML=mod.tabs.map((t,i)=>'<button type="button" class="btab'+(i===0?' act':'')+'" id="bt-'+t.id+'" onclick="setTab(\''+t.id+'\')"><div class="bbar"></div><span class="bico">'+t.ico+'</span><span>'+t.lbl+'</span></button>').join('');
+  document.getElementById('bnav').innerHTML=mod.tabs.map((t,i)=>'<button class="btab'+(i===0?' act':'')+'" id="bt-'+t.id+'" onclick="setTab(\''+t.id+'\')"><div class="bbar"></div><span class="bico">'+t.ico+'</span><span>'+t.lbl+'</span></button>').join('');
   setTab(mod.tabs[0].id);
 }
 function setTab(id){
@@ -283,8 +278,8 @@ function stars(n){return[1,2,3,4,5,6,7,8,9,10].map(i=>'<span style="font-size:15
 // TRABAJADORES
 function rT(){
   const act=CACHE.trabajadores.filter(t=>t.estado==='activo'||t.estado==='contrato');
-  pg('trabajadores','<div class="shdr"><div><div class="stit">Trabajadores</div><div class="ssub">'+act.length+' registrado'+(act.length!==1?'s':'')+'</div></div><button type="button" class="btn bg bsm" onclick="mTrab(null)">+ Nuevo</button></div>'+
-  (act.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div><div class="wtiny">'+t.cargo+'</div><div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.cuenta||'Sin cuenta')+'</div><div style="margin-top:6px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact"><button type="button" class="btn bgr bsm" onclick="mTrab(\''+t.id+'\')">Editar</button>'+(t.estado==='activo'?'<button type="button" class="btn bo bsm" onclick="mContr(\''+t.id+'\')">Contrato</button>':'')+'<button type="button" class="btn br bsm" onclick="mBorr(\'trabajador\',\''+t.id+'\')">Eliminar</button></div></div></div>').join('')||'<div class="empty">Sin trabajadores registrados</div>'));
+  pg('trabajadores','<div class="shdr"><div><div class="stit">Trabajadores</div><div class="ssub">'+act.length+' registrado'+(act.length!==1?'s':'')+'</div></div><button class="btn bg bsm" onclick="mTrab(null)">+ Nuevo</button></div>'+
+  (act.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div><div class="wtiny">'+t.cargo+'</div><div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.cuenta||'Sin cuenta')+'</div><div style="margin-top:6px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact"><button class="btn bgr bsm" onclick="mTrab(\''+t.id+'\')">Editar</button>'+(t.estado==='activo'?'<button class="btn bo bsm" onclick="mContr(\''+t.id+'\')">Contrato</button>':'')+'<button class="btn br bsm" onclick="mBorr(\'trabajador\',\''+t.id+'\')">Eliminar</button></div></div></div>').join('')||'<div class="empty">Sin trabajadores registrados</div>'));
 }
 function selOpts(arr,val){return arr.map(a=>'<option'+(a===val?' selected':'')+'>'+a+'</option>').join('')}
 function mTrab(id){
@@ -299,7 +294,7 @@ function mTrab(id){
     '<div class="sep"></div><p style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Datos bancarios</p>'+
     '<div class="field" style="margin-bottom:10px"><label>Banco</label><select id="tbco">'+selOpts(BANCOS,t.banco)+'</select></div>'+
     '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Tipo</label><select id="ttipo"><option'+(t.tipoCuenta==='Ahorros'?' selected':'')+'>Ahorros</option><option'+(t.tipoCuenta==='Corriente'?' selected':'')+'>Corriente</option></select></div><div class="field"><label># Cuenta</label><input id="tcta" value="'+(t.cuenta||'')+'"></div></div>'+
-    '<div class="brow" style="justify-content:flex-end;margin-top:4px"><button type="button" class="btn bgr" onclick="closeModal()">Cancelar</button><button type="button" class="btn bg" id="btnGT" onclick="guardT(\''+( id||'')+'\')">Guardar</button></div>');
+    '<div class="brow" style="justify-content:flex-end;margin-top:4px"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" id="btnGT" onclick="guardT(\''+( id||'')+'\')">Guardar</button></div>');
 }
 window.mTrab=mTrab;
 async function guardT(id){
@@ -316,14 +311,14 @@ async function guardT(id){
 window.guardT=guardT;
 function mContr(id){
   const t=CACHE.trabajadores.find(x=>x.id===id);
-  openModal('Pasar a contrato fijo','<div class="alerto" style="margin-bottom:12px"><strong>'+t.nombres+'</strong> dejara de aparecer como eventual. Su historial se conserva.</div><div class="field" style="margin-bottom:14px"><label>Fecha inicio contrato *</label><input type="date" id="cf" value="'+hoy()+'"></div><div class="brow" style="justify-content:flex-end"><button type="button" class="btn bgr" onclick="closeModal()">Cancelar</button><button type="button" class="btn bb" onclick="confContr(\''+id+'\')">Confirmar</button></div>');
+  openModal('Pasar a contrato fijo','<div class="alerto" style="margin-bottom:12px"><strong>'+t.nombres+'</strong> dejara de aparecer como eventual. Su historial se conserva.</div><div class="field" style="margin-bottom:14px"><label>Fecha inicio contrato *</label><input type="date" id="cf" value="'+hoy()+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bb" onclick="confContr(\''+id+'\')">Confirmar</button></div>');
 }
 window.mContr=mContr;
 async function confContr(id){const f=document.getElementById('cf').value;if(!f){toast('Ingresa la fecha','err');return}await fupd('trabajadores',id,{estado:'contrato',fechaContrato:f});closeModal();toast('Marcado como contrato fijo');}
 window.confContr=confContr;
 function mBorr(tipo,id){
   const msgs={trabajador:'Eliminar este trabajador y todas sus asistencias?',asistencia:'Eliminar este registro de asistencia?',negra:'Eliminar de lista negra?',periodo:'Eliminar este periodo?'};
-  openModal('Confirmar eliminacion','<p style="font-size:14px;margin-bottom:18px">'+msgs[tipo]+' Esta accion no se puede deshacer.</p><div class="brow" style="justify-content:flex-end"><button type="button" class="btn bgr" onclick="closeModal()">Cancelar</button><button type="button" class="btn br" onclick="execBorr(\''+tipo+'\',\''+id+'\')">Eliminar</button></div>');
+  openModal('Confirmar eliminacion','<p style="font-size:14px;margin-bottom:18px">'+msgs[tipo]+' Esta accion no se puede deshacer.</p><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="execBorr(\''+tipo+'\',\''+id+'\')">Eliminar</button></div>');
 }
 window.mBorr=mBorr;
 async function execBorr(tipo,id){
@@ -339,13 +334,14 @@ window.execBorr=execBorr;
 // ESTADOS
 function rE(){
   pg('estados','<div class="shdr"><div class="stit">Estado de trabajadores</div></div>'+
-  CACHE.trabajadores.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+'</div><div style="margin-top:5px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact"><button type="button" class="btn br bsm" onclick="mBaja(\''+t.id+'\')">Dar de baja</button>':'')+
-  (t.estado==='baja'?'<button type="button" class="btn bg bsm" onclick="reactiv(\''+t.id+'\')">Reactivar</button><button type="button" class="btn br bsm" onclick="mNegra(\''+t.id+'\')">Lista negra</button>':'')+
+  CACHE.trabajadores.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+'</div><div style="margin-top:5px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact">'+
+  (t.estado==='activo'?'<button class="btn br bsm" onclick="mBaja(\''+t.id+'\')">Dar de baja</button>':'')+
+  (t.estado==='baja'?'<button class="btn bg bsm" onclick="reactiv(\''+t.id+'\')">Reactivar</button><button class="btn br bsm" onclick="mNegra(\''+t.id+'\')">Lista negra</button>':'')+
   '</div></div></div>').join(''));
 }
 function mBaja(id){
   const t=CACHE.trabajadores.find(x=>x.id===id);
-  openModal('Dar de baja a '+t.nombres,'<div class="field" style="margin-bottom:10px"><label>Fecha de baja</label><input type="date" id="fb" value="'+hoy()+'"></div><div class="field" style="margin-bottom:14px"><label>Motivo</label><textarea id="fmot" placeholder="Motivo de la baja..."></textarea></div><div class="brow" style="justify-content:flex-end"><button type="button" class="btn bgr" onclick="closeModal()">Cancelar</button><button type="button" class="btn br" onclick="confBaja(\''+id+'\')">Confirmar baja</button></div>');
+  openModal('Dar de baja a '+t.nombres,'<div class="field" style="margin-bottom:10px"><label>Fecha de baja</label><input type="date" id="fb" value="'+hoy()+'"></div><div class="field" style="margin-bottom:14px"><label>Motivo</label><textarea id="fmot" placeholder="Motivo de la baja..."></textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="confBaja(\''+id+'\')">Confirmar baja</button></div>');
 }
 window.mBaja=mBaja;
 async function confBaja(id){await fupd('trabajadores',id,{estado:'baja',fechaBaja:document.getElementById('fb').value,motivoBaja:document.getElementById('fmot').value});closeModal();toast('Trabajador dado de baja');}
@@ -357,7 +353,7 @@ function selCal(n){calV=n;document.querySelectorAll('.cal-btn').forEach((b,i)=>b
 window.selCal=selCal;
 function mNegra(id){
   const t=CACHE.trabajadores.find(x=>x.id===id);calV=0;
-  openModal('Archivar en lista negra','<p style="font-size:13px;margin-bottom:12px"><strong>'+t.nombres+'</strong> sera archivado y no aparecera en marcaciones.</p><div class="field" style="margin-bottom:10px"><label>Calificacion 1-10 (1=muy malo, 10=excelente)</label><div class="cal-wrap">'+[1,2,3,4,5,6,7,8,9,10].map(n=>'<button type="button" class="cal-btn" onclick="selCal('+n+')">'+n+'</button>').join('')+'</div></div><div class="field" style="margin-bottom:14px"><label>Comentario para proximo llamado</label><textarea id="ncal" placeholder="Podria volver a llamarse?"></textarea></div><div class="brow" style="justify-content:flex-end"><button type="button" class="btn bgr" onclick="closeModal()">Cancelar</button><button type="button" class="btn br" onclick="confNegra(\''+id+'\')">Archivar</button></div>');
+  openModal('Archivar en lista negra','<p style="font-size:13px;margin-bottom:12px"><strong>'+t.nombres+'</strong> sera archivado y no aparecera en marcaciones.</p><div class="field" style="margin-bottom:10px"><label>Calificacion 1-10 (1=muy malo, 10=excelente)</label><div class="cal-wrap">'+[1,2,3,4,5,6,7,8,9,10].map(n=>'<button class="cal-btn" onclick="selCal('+n+')">'+n+'</button>').join('')+'</div></div><div class="field" style="margin-bottom:14px"><label>Comentario para proximo llamado</label><textarea id="ncal" placeholder="Podria volver a llamarse?"></textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="confNegra(\''+id+'\')">Archivar</button></div>');
 }
 window.mNegra=mNegra;
 async function confNegra(id){
@@ -371,11 +367,11 @@ window.confNegra=confNegra;
 // LISTA NEGRA
 function rLN(){
   pg('lnegra','<div class="shdr"><div><div class="stit">Lista negra</div><div class="ssub">Archivados - no aparecen en marcaciones</div></div></div>'+
-  (CACHE.listaNegra.map(n=>'<div class="ncard"><div class="wname">'+n.nombres+'</div><div class="wsub">'+n.area+' - C.I. '+n.cedula+'</div><div style="margin:6px 0">'+stars(n.calificacion)+' <span style="font-size:12px;color:var(--t2)">'+n.calificacion+'/10</span></div>'+(n.comentario?'<div style="font-size:12px;color:var(--t2);background:#fafafa;padding:8px;border-radius:6px;margin-top:4px">'+n.comentario+'</div>':'')+'<div style="font-size:11px;color:var(--t3);margin-top:6px">Archivado: '+fmtF(n.fecha)+'</div><div class="wact"><button type="button" class="btn bgr bsm" onclick="mEdN(\''+n.id+'\')">Editar nota</button><button type="button" class="btn br bsm" onclick="mBorr(\'negra\',\''+n.id+'\')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin registros en lista negra</div>'));
+  (CACHE.listaNegra.map(n=>'<div class="ncard"><div class="wname">'+n.nombres+'</div><div class="wsub">'+n.area+' - C.I. '+n.cedula+'</div><div style="margin:6px 0">'+stars(n.calificacion)+' <span style="font-size:12px;color:var(--t2)">'+n.calificacion+'/10</span></div>'+(n.comentario?'<div style="font-size:12px;color:var(--t2);background:#fafafa;padding:8px;border-radius:6px;margin-top:4px">'+n.comentario+'</div>':'')+'<div style="font-size:11px;color:var(--t3);margin-top:6px">Archivado: '+fmtF(n.fecha)+'</div><div class="wact"><button class="btn bgr bsm" onclick="mEdN(\''+n.id+'\')">Editar nota</button><button class="btn br bsm" onclick="mBorr(\'negra\',\''+n.id+'\')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin registros en lista negra</div>'));
 }
 function mEdN(id){
   const n=CACHE.listaNegra.find(x=>x.id===id);calV=n.calificacion;
-  openModal('Editar calificacion','<p style="font-weight:700;margin-bottom:10px">'+n.nombres+'</p><div class="field" style="margin-bottom:10px"><label>Calificacion</label><div class="cal-wrap">'+[1,2,3,4,5,6,7,8,9,10].map(i=>'<button type="button" class="cal-btn'+(i<=n.calificacion?' sel':'')+'" onclick="selCal('+i+')">'+i+'</button>').join('')+'</div></div><div class="field" style="margin-bottom:14px"><label>Comentario</label><textarea id="ncal">'+(n.comentario||'')+'</textarea></div><div class="brow" style="justify-content:flex-end"><button type="button" class="btn bgr" onclick="closeModal()">Cancelar</button><button type="button" class="btn bg" onclick="gEdN(\''+id+'\')">Guardar</button></div>');
+  openModal('Editar calificacion','<p style="font-weight:700;margin-bottom:10px">'+n.nombres+'</p><div class="field" style="margin-bottom:10px"><label>Calificacion</label><div class="cal-wrap">'+[1,2,3,4,5,6,7,8,9,10].map(i=>'<button class="cal-btn'+(i<=n.calificacion?' sel':'')+'" onclick="selCal('+i+')">'+i+'</button>').join('')+'</div></div><div class="field" style="margin-bottom:14px"><label>Comentario</label><textarea id="ncal">'+(n.comentario||'')+'</textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gEdN(\''+id+'\')">Guardar</button></div>');
 }
 window.mEdN=mEdN;
 async function gEdN(id){await fupd('listaNegra',id,{calificacion:calV,comentario:document.getElementById('ncal').value});closeModal();toast('Nota actualizada correctamente');}
@@ -396,9 +392,9 @@ function rM(){
     return'<div class="mcard'+(m.presente?' pre':'')+'" id="mc-'+t.id+'"><div class="mtop"><div class="mchk'+(m.presente?' on':'')+'" id="mchk-'+t.id+'" onclick="togP(\''+t.id+'\','+eFin+')">'+(m.presente?'v':'')+
     '</div><div style="flex:1"><div class="mname">'+t.nombres+'</div><div class="marea">'+t.area+'</div></div>'+
     (m.presente&&c.pago!=null?'<div style="text-align:right"><div class="mpago">$'+c.pago.toFixed(2)+'</div>'+(c.atrasoH>0?'<div class="matr">-'+c.atrasoH+'h (-$'+c.descVal.toFixed(2)+')</div>':'')+'</div>':'<div id="mcalc-'+t.id+'"></div>')+
-    '</div><div class="mdet'+(m.presente?' show':'')+'" id="mdet-'+t.id+'"><div class="mtimes"><div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" onchange="updC(\''+t.id+'\','+eFin+')"></div><div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" onchange="updC(\''+t.id+'\','+eFin+')"></div><div class="field" style="display:flex;align-items:center;padding-bottom:5px"><label style="margin:0;display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap"><input type="checkbox" id="mfer-'+t.id+'" '+(m.feriado?'checked':'')+' onchange="updC(\''+t.id+'\','+eFin+')"> Feriado</label></div></div><div class="field"><label>Observacion</label><input id="mobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div></div></div>';
+    '</div><div class="mdet'+(m.presente?' show':'')+'" id="mdet-'+t.id+'"><div class="mtimes"><div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" onchange="updC(\''+t.id+'\','+eFin+')"></div><div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" onchange="updC(\''+t.id+'\','+eFin+')"></div><div class="field"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="mfer-'+t.id+'" '+(m.feriado?'checked':'')+' onchange="updC(\''+t.id+'\','+eFin+')"> Feriado</label></div></div><div class="field"><label>Observacion</label><input id="mobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div></div></div>';
   }).join('')||'<div class="empty">No hay eventuales activos</div>'+
-  '<button type="button" class="btn bg bfull" style="margin-top:12px" onclick="guardDia()">Guardar marcacion del dia</button>');
+  '<button class="btn bg bfull" style="margin-top:12px" onclick="guardDia()">Guardar marcacion del dia</button>');
 }
 window.chFecha=function(f){mFecha=f;mMap={};rM();};
 window.togP=function(tId,eFin){
@@ -442,11 +438,11 @@ function rHist(){
   const as=[...CACHE.asistencias].sort((a,b)=>b.fecha.localeCompare(a.fecha));
   pg('historial','<div class="shdr"><div class="stit">Historial de asistencias</div></div>'+
   (as.length?'<div class="iwrap"><table><thead><tr><th>Fecha</th><th>Trabajador</th><th>Entrada</th><th>Atraso</th><th>Pago</th><th></th></tr></thead><tbody>'+
-  as.map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<tr><td style="white-space:nowrap">'+fmtF(a.fecha)+'</td><td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.area+'</span></td><td>'+a.entrada+'</td><td class="'+(c.atrasoH>0?'dc':'trr')+'">'+( c.atrasoH>0?c.atrasoH+'h':'--')+'</td><td class="tr"><strong>$'+c.pago.toFixed(2)+'</strong></td><td><div style="display:flex;gap:4px"><button type="button" class="btn bgr bsm" onclick="mEdA(\''+a.id+'\')">Ed</button><button type="button" class="btn br bsm" onclick="mBorr(\'asistencia\',\''+a.id+'\')">X</button></div></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Sin registros de asistencia</div>'));
+  as.map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<tr><td style="white-space:nowrap">'+fmtF(a.fecha)+'</td><td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.area+'</span></td><td>'+a.entrada+'</td><td class="'+(c.atrasoH>0?'dc':'trr')+'">'+( c.atrasoH>0?c.atrasoH+'h':'--')+'</td><td class="tr"><strong>$'+c.pago.toFixed(2)+'</strong></td><td><div style="display:flex;gap:4px"><button class="btn bgr bsm" onclick="mEdA(\''+a.id+'\')">Ed</button><button class="btn br bsm" onclick="mBorr(\'asistencia\',\''+a.id+'\')">X</button></div></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Sin registros de asistencia</div>'));
 }
 function mEdA(id){
   const a=CACHE.asistencias.find(x=>x.id===id);const t=CACHE.trabajadores.find(x=>x.id===a.tId);
-  openModal('Editar - '+(t?.nombres||''),'<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Fecha</label><input type="date" id="ef" value="'+a.fecha+'"></div><div class="field"><label>Entrada</label><input type="time" id="ee" value="'+a.entrada+'"></div></div><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Salida</label><input type="time" id="es" value="'+a.salida+'"></div><div class="field"><label>Feriado</label><select id="efer"><option value="0"'+(!a.feriado?' selected':'')+'>No</option><option value="1"'+(a.feriado?' selected':'')+'>Si</option></select></div></div><div class="field" style="margin-bottom:14px"><label>Observacion</label><input id="eobs" value="'+(a.obs||'')+'"></div><div class="brow" style="justify-content:flex-end"><button type="button" class="btn bgr" onclick="closeModal()">Cancelar</button><button type="button" class="btn bg" onclick="gEdA(\''+id+'\')">Guardar</button></div>');
+  openModal('Editar - '+(t?.nombres||''),'<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Fecha</label><input type="date" id="ef" value="'+a.fecha+'"></div><div class="field"><label>Entrada</label><input type="time" id="ee" value="'+a.entrada+'"></div></div><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Salida</label><input type="time" id="es" value="'+a.salida+'"></div><div class="field"><label>Feriado</label><select id="efer"><option value="0"'+(!a.feriado?' selected':'')+'>No</option><option value="1"'+(a.feriado?' selected':'')+'>Si</option></select></div></div><div class="field" style="margin-bottom:14px"><label>Observacion</label><input id="eobs" value="'+(a.obs||'')+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gEdA(\''+id+'\')">Guardar</button></div>');
 }
 window.mEdA=mEdA;
 async function gEdA(id){await fupd('asistencias',id,{fecha:document.getElementById('ef').value,entrada:document.getElementById('ee').value,salida:document.getElementById('es').value,feriado:document.getElementById('efer').value==='1',obs:document.getElementById('eobs').value});closeModal();toast('Asistencia actualizada correctamente');}
@@ -458,21 +454,20 @@ function rBajas(){
 }
 // SUPERVISOR
 function rSV(){
-  const act=CACHE.trabajadores.filter(t=>t.estado==='activo');
+  const act=CACHE.trabajadores.filter(t=>t.estado==='activo').length;
   let tP=0;CACHE.asistencias.forEach(a=>{tP+=calcP(a.fecha,a.entrada,a.salida,a.feriado).pago;});
-  const pa=AREAS.map(a=>({a,n:act.filter(t=>t.area===a).length})).filter(x=>x.n>0);
-  pg('sv_vista','<div class="stit" style="margin-bottom:12px">Vista general</div><div class="srow"><div class="stat"><div class="snum">'+act.length+'</div><div class="slbl">Activos</div></div><div class="stat"><div class="snum">'+CACHE.asistencias.length+'</div><div class="slbl">Dias marcados</div></div><div class="stat"><div class="snum">$'+tP.toFixed(0)+'</div><div class="slbl">Total acum.</div></div></div>'+
+  const pa=AREAS.map(a=>({a,n:CACHE.trabajadores.filter(t=>t.area===a&&t.estado==='activo').length})).filter(x=>x.n>0);
+  pg('sv_vista','<div class="stit" style="margin-bottom:12px">Vista general</div><div class="srow"><div class="stat"><div class="snum">'+act+'</div><div class="slbl">Activos</div></div><div class="stat"><div class="snum">'+CACHE.asistencias.length+'</div><div class="slbl">Dias marcados</div></div><div class="stat"><div class="snum">$'+tP.toFixed(0)+'</div><div class="slbl">Total acum.</div></div></div>'+
   '<div class="card"><div class="stit" style="margin-bottom:10px">Por area</div>'+pa.map(x=>'<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:13px"><span class="chip">'+x.a+'</span><strong>'+x.n+' persona'+(x.n!==1?'s':'')+'</strong></div>').join('')+'</div>'+
-  '<div class="card"><div class="stit" style="margin-bottom:10px">Listado de Personal Activo</div>'+act.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--bg);font-size:12px"><strong>${t.nombres}</strong><br><span style="color:var(--t3)">C.I: ${t.cedula} | ${t.area}</span></div>`).join('')+'</div>'+
   '<div class="card"><div class="stit" style="margin-bottom:10px">Ultimas marcaciones</div>'+[...CACHE.asistencias].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,8).map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12px"><div><strong>'+t.nombres+'</strong><div style="color:var(--t3)">'+fmtF(a.fecha)+(c.atrasoH>0?' - <span style="color:var(--r)">atraso '+c.atrasoH+'h</span>':'')+'</div></div><strong>$'+c.pago.toFixed(2)+'</strong></div>';}).join('')+'</div>');
 }
 function rSVP(){
-  pg('sv_periodos','<div class="shdr"><div class="stit">Periodos autorizados</div><button type="button" class="btn bg bsm" onclick="mPer(null)">+ Nuevo</button></div>'+
-  (CACHE.periodos.map(p=>'<div class="pchip"><div class="pdates">'+fmtF(p.desde)+' a '+fmtF(p.hasta)+'</div><div class="parea"><span class="chip">'+(p.area||'Todas las areas')+'</span>'+(p.obs?' - '+p.obs:'')+'</div><div style="margin-top:8px" class="brow"><button type="button" class="btn bgr bsm" onclick="mPer(\''+p.id+'\')">Editar</button><button type="button" class="btn br bsm" onclick="mBorr(\'periodo\',\''+p.id+'\')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin periodos</div>'));
+  pg('sv_periodos','<div class="shdr"><div class="stit">Periodos autorizados</div><button class="btn bg bsm" onclick="mPer(null)">+ Nuevo</button></div>'+
+  (CACHE.periodos.map(p=>'<div class="pchip"><div class="pdates">'+fmtF(p.desde)+' a '+fmtF(p.hasta)+'</div><div class="parea"><span class="chip">'+(p.area||'Todas las areas')+'</span>'+(p.obs?' - '+p.obs:'')+'</div><div style="margin-top:8px" class="brow"><button class="btn bgr bsm" onclick="mPer(\''+p.id+'\')">Editar</button><button class="btn br bsm" onclick="mBorr(\'periodo\',\''+p.id+'\')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin periodos</div>'));
 }
 function mPer(id){
   const p=id?CACHE.periodos.find(x=>x.id===id):{area:'',desde:hoy(),hasta:hoy(),obs:''};
-  openModal(id?'Editar periodo':'Nuevo periodo autorizado','<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde *</label><input type="date" id="pd" value="'+p.desde+'"></div><div class="field"><label>Hasta *</label><input type="date" id="ph" value="'+p.hasta+'"></div></div><div class="field" style="margin-bottom:10px"><label>Area</label><select id="pa"><option value="">Todas</option>'+selOpts(AREAS,p.area)+'</select></div><div class="field" style="margin-bottom:14px"><label>Observacion</label><input id="po" value="'+(p.obs||'')+'"></div><div class="brow" style="justify-content:flex-end"><button type="button" class="btn bgr" onclick="closeModal()">Cancelar</button><button type="button" class="btn bg" onclick="gPer(\''+( id||'')+'\')">Guardar</button></div>');
+  openModal(id?'Editar periodo':'Nuevo periodo autorizado','<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde *</label><input type="date" id="pd" value="'+p.desde+'"></div><div class="field"><label>Hasta *</label><input type="date" id="ph" value="'+p.hasta+'"></div></div><div class="field" style="margin-bottom:10px"><label>Area</label><select id="pa"><option value="">Todas</option>'+selOpts(AREAS,p.area)+'</select></div><div class="field" style="margin-bottom:14px"><label>Observacion</label><input id="po" value="'+(p.obs||'')+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gPer(\''+( id||'')+'\')">Guardar</button></div>');
 }
 window.mPer=mPer;
 async function gPer(id){
@@ -486,7 +481,7 @@ window.gPer=gPer;
 let iD='',iH='',iA='';
 function rInf(){
   const n=new Date();if(!iD)iD=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);if(!iH)iH=hoy();
-  pg('informe','<div class="stit" style="margin-bottom:12px">Informe por periodo</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="id" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="ih" value="'+iH+'" onchange="iH=this.value"></div></div><div class="field" style="margin-bottom:12px"><label>Area</label><select id="ia" onchange="iA=this.value"><option value="">Todas las areas</option>'+selOpts(AREAS,iA)+'</select></div><button type="button" class="btn bg bfull" onclick="genInf()">Generar informe</button></div><div id="inf-res"></div>');
+  pg('informe','<div class="stit" style="margin-bottom:12px">Informe por periodo</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="id" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="ih" value="'+iH+'" onchange="iH=this.value"></div></div><div class="field" style="margin-bottom:12px"><label>Area</label><select id="ia" onchange="iA=this.value"><option value="">Todas las areas</option>'+selOpts(AREAS,iA)+'</select></div><button class="btn bg bfull" onclick="genInf()">Generar informe</button></div><div id="inf-res"></div>');
 }
 window.genInf=function(){
   const desde=document.getElementById('id').value,hasta=document.getElementById('ih').value,area=document.getElementById('ia').value;
@@ -498,11 +493,11 @@ window.genInf=function(){
   if(!fi.length){document.getElementById('inf-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
   const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
   const per=d1.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'})+' al '+d2.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('inf-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nomina mensual</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="8" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button type="button" class="btn bb" onclick="impr(\'nomina\',\''+desde+'\',\''+hasta+'\',\''+area+'\')">Imprimir nomina</button>';
+  document.getElementById('inf-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nomina mensual</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="8" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button class="btn bb" onclick="impr(\'nomina\',\''+desde+'\',\''+hasta+'\',\''+area+'\')">Imprimir nomina</button>';
 };
 function rTrans(){
   const n=new Date();if(!iD)iD=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);if(!iH)iH=hoy();
-  pg('transferencias','<div class="stit" style="margin-bottom:12px">Detalle para transferencias</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="td" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="th2" value="'+iH+'" onchange="iH=this.value"></div></div><button type="button" class="btn bg bfull" onclick="genTrans()">Generar detalle</button></div><div id="trans-res"></div>');
+  pg('transferencias','<div class="stit" style="margin-bottom:12px">Detalle para transferencias</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="td" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="th2" value="'+iH+'" onchange="iH=this.value"></div></div><button class="btn bg bfull" onclick="genTrans()">Generar detalle</button></div><div id="trans-res"></div>');
 }
 window.genTrans=function(){
   const desde=document.getElementById('td').value,hasta=document.getElementById('th2').value;
@@ -515,15 +510,15 @@ window.genTrans=function(){
   '<div class="iwrap"><table><thead><tr><th>Nombres</th><th>Cedula</th><th>Banco</th><th>Tipo</th><th># Cuenta</th><th>Dias</th><th>Total</th></tr></thead><tbody>'+
   conC.map(({t,r})=>'<tr><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+( t.banco||'--')+'</td><td style="font-size:11px">'+(t.tipoCuenta||'--')+'</td><td style="font-family:monospace;font-size:11px">'+t.cuenta+'</td><td class="tc">'+r.dias+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>').join('')+
   '<tr class="tot"><td colspan="6" style="text-align:right;padding-right:12px">TOTAL</td><td class="tr">$'+tot.toFixed(2)+'</td></tr></tbody></table></div>'+
-  '<button type="button" class="btn bb" style="margin-top:10px" onclick="impr(\'transferencias\',\''+desde+'\',\''+hasta+'\',\'\')">Imprimir detalle</button>';
+  '<button class="btn bb" style="margin-top:10px" onclick="impr(\'transferencias\',\''+desde+'\',\''+hasta+'\',\'\')">Imprimir detalle</button>';
 };
 function rPers(){
-  pg('personal','<div class="shdr"><div class="stit">Personal</div><button type="button" class="btn bg bsm" onclick="mTrab(null)">+ Nuevo</button></div>'+
-  CACHE.trabajadores.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div><div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.tipoCuenta||'')+' - '+(t.cuenta||'Sin cuenta')+'</div><div style="margin-top:5px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact"><button type="button" class="btn bgr bsm" onclick="mTrab(\''+t.id+'\')">Editar</button><button type="button" class="btn br bsm" onclick="mBorr(\'trabajador\',\''+t.id+'\')">Eliminar</button></div></div></div>').join(''));
+  pg('personal','<div class="shdr"><div class="stit">Personal</div><button class="btn bg bsm" onclick="mTrab(null)">+ Nuevo</button></div>'+
+  CACHE.trabajadores.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div><div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.tipoCuenta||'')+' - '+(t.cuenta||'Sin cuenta')+'</div><div style="margin-top:5px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact"><button class="btn bgr bsm" onclick="mTrab(\''+t.id+'\')">Editar</button><button class="btn br bsm" onclick="mBorr(\'trabajador\',\''+t.id+'\')">Eliminar</button></div></div></div>').join(''));
 }
 function rJLN(){
   pg('jlnegra','<div class="shdr"><div><div class="stit">Lista negra</div><div class="ssub">Referencia para futuros llamados</div></div></div>'+
-  (CACHE.listaNegra.map(n=>'<div class="ncard"><div class="wname">'+n.nombres+'</div><div class="wsub">'+n.area+' - C.I. '+n.cedula+'</div><div style="margin:6px 0">'+stars(n.calificacion)+' <span style="font-size:12px;color:var(--t2)">'+n.calificacion+'/10</span></div>'+(n.comentario?'<div style="font-size:12px;color:var(--t2);background:#fafafa;padding:8px;border-radius:6px;margin-top:4px">'+n.comentario+'</div>':'')+'<div style="font-size:11px;color:var(--t3);margin-top:6px">Archivado: '+fmtF(n.fecha)+'</div><div class="wact"><button type="button" class="btn bgr bsm" onclick="mEdN(\''+n.id+'\')">Editar nota</button><button type="button" class="btn br bsm" onclick="mBorr(\'negra\',\''+n.id+'\')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin registros</div>'));
+  (CACHE.listaNegra.map(n=>'<div class="ncard"><div class="wname">'+n.nombres+'</div><div class="wsub">'+n.area+' - C.I. '+n.cedula+'</div><div style="margin:6px 0">'+stars(n.calificacion)+' <span style="font-size:12px;color:var(--t2)">'+n.calificacion+'/10</span></div>'+(n.comentario?'<div style="font-size:12px;color:var(--t2);background:#fafafa;padding:8px;border-radius:6px;margin-top:4px">'+n.comentario+'</div>':'')+'<div style="font-size:11px;color:var(--t3);margin-top:6px">Archivado: '+fmtF(n.fecha)+'</div><div class="wact"><button class="btn bgr bsm" onclick="mEdN(\''+n.id+'\')">Editar nota</button><button class="btn br bsm" onclick="mBorr(\'negra\',\''+n.id+'\')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin registros</div>'));
 }
 window.impr=function(tipo,desde,hasta,area){
   const el=document.getElementById(tipo==='nomina'?'inf-res':'trans-res');
@@ -534,7 +529,6 @@ window.impr=function(tipo,desde,hasta,area){
 };
 // INICIO
 startLS();
-window.togPin=()=>{const i=document.getElementById('pin');i.type=i.type==='password'?'text':'password'};
 // Seguridad: Si en 4 segundos no ha cargado Firebase, forzar login
 setTimeout(()=>{
   const loader = document.getElementById('loader');
