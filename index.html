@@ -251,12 +251,14 @@ function calcPAdmin(fecha, entrada, salida, feriado, sueldo){
 function resTAdmin(tId,sueldo,desde,hasta){
   sueldo=sueldo||500;
   var valorDia=Math.round((sueldo/30)*100)/100;
+  console.log('DEBUG resTAdmin - tId:', tId, 'sueldo:', sueldo, 'valorDia:', valorDia);
   var asist=CACHE.asistencias.filter(function(a){
     if(a.tId!==tId||a.falta)return false;
     if(desde&&a.fecha<desde)return false;
     if(hasta&&a.fecha>hasta)return false;
     return true;
   });
+  console.log('DEBUG resTAdmin - Asistencias encontradas:', asist.length);
   // Agrupar por semana (clave = lunes de esa semana)
   var semanas={};
   var diasSet={};
@@ -288,6 +290,9 @@ function resTAdmin(tId,sueldo,desde,hasta){
   var pagoBono=bonoDias*valorDia;
   var pagoTotal=pagoReal+pagoBono;
   var totalDias=diasTrabajados+bonoDias;
+  
+  console.log('DEBUG resTAdmin - pagoReal:', pagoReal, 'pagoBono:', pagoBono, 'pagoTotal:', pagoTotal);
+  console.log('DEBUG resTAdmin - diasTrabajados:', diasTrabajados, 'bonoDias:', bonoDias);
   
   return{pago:Math.round(pagoTotal*100)/100,diasTrabajados:diasTrabajados,semanasIntegrales:semanasIntegrales,bonoDias:bonoDias,totalDias:totalDias,valorDia:valorDia};
 }
