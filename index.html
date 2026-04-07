@@ -432,7 +432,7 @@ function setTab(id){
   document.getElementById('pg-'+id)?.classList.add('show');
   document.getElementById('bt-'+id)?.classList.add('act');
   const r={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,faltas:rFaltas,historial:rHist,bajas:rBajas,marc_admin:rMarcAdmin,faltas_admin:rFaltasAdmin,hist_admin:rHistAdmin,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,transferencias:rTrans,personal:rPers,admin_evt:rAdminEvt,jlnegra:rJLN};
-  if(r[id])r[id]();
+  try{if(r[id])r[id]();}catch(e){console.error('setTab error en',id,':',e);document.getElementById('pg-'+id).innerHTML='<div class="empty" style="color:var(--r)">Error cargando: '+e.message+'</div>';}
 }
 window.setTab=setTab;
 function pg(id,html){const el=document.getElementById('pg-'+id);if(el)el.innerHTML=html}
@@ -444,6 +444,7 @@ function stars(n){return[1,2,3,4,5,6,7,8,9,10].map(i=>'<span style="font-size:15
 // RRHH - TRABAJADORES
 // Uso data-id en botones para evitar problemas de escape con IDs de Firestore
 function rT(){
+  try{
   var todos=CACHE.trabajadores.filter(function(t){return t.estado!=='archivado';});
   var activos=todos.filter(function(t){return t.estado==='activo'||t.estado==='contrato';});
   var inactivos=todos.filter(function(t){return t.estado==='baja';});
@@ -485,6 +486,7 @@ function rT(){
       ?'<div style="font-size:11px;font-weight:700;color:var(--a);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;padding-left:2px">Inactivos ('+inactivos.length+')</div>'+inactivos.map(wCard).join('')
       :'')
   );
+  }catch(e){pg('trabajadores','<div class="empty" style="color:var(--r)">Error: '+e.message+'</div>');console.error('rT error:',e);}
 }
 window.togActivo=async function(id,nuevoEstado){
   var t=CACHE.trabajadores.find(function(x){return x.id===id;});
