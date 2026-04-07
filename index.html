@@ -228,57 +228,14 @@ function fmtF(iso){if(!iso)return'--';const[y,m,d]=iso.split('-');return d+'/'+m
 function fmtFL(iso){if(!iso)return'--';return new Date(iso+'T12:00:00').toLocaleDateString('es-EC',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
 function inic(n){return n.trim().split(' ').filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join('')}
 function toast(msg,tipo='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+tipo;clearTimeout(t._t);t._t=setTimeout(()=>t.className='',2800)}
-// calcPAdmin: pago por dia para administrativo eventual
-// Dias normales L-V: sueldo/30 = valor dia fijo
-// Feriados/Descanso: (sueldo/30/8) * 2 * horas_efectivas (sin almuerzo, con atraso)
-// Retorna {pago, valorDia, valorHora, esFeriado, horas, atrasoH, descVal}
-function calcPAdmin(fecha,entrada,salida,sueldo){
-  // Wrapper que usa calcPAdminFer con feriado=false para dias normales
+// calcPAdmin: valor dia = sueldo / 30 (simple, sin horas)
+function calcPAdmin(sueldo){
   sueldo=sueldo||500;
-  var d=new Date(fecha+'T12:00:00');
-  var dow=d.getDay();
-  var esFin=dow===0||dow===6;
-  return calcPAdminFer(fecha,entrada,salida,esFin,sueldo);
+  return Math.round((sueldo/30)*100)/100;
 }
 
-// calcPAdminFer: igual pero acepta flag feriado explícito del registro
-function calcPAdminFer(fecha,entrada,salida,feriado,sueldo){
-  // Admin eventual: jornada 08:00-17:00 = 9h brutos - 1h almuerzo = 8h efectivas
-  // Dia normal L-V: pago = sueldo/30 fijo
-  // Feriado/S/D: pago = (sueldo/30/8) * 2 * horas_efectivas
-  // Atraso: ya se refleja en menos horas (no se descuenta dos veces)
-  sueldo=sueldo||500;
-  var valorDia=Math.round((sueldo/30)*100)/100;
-  var valorHora=valorDia/8;
-  var d=new Date(fecha+'T12:00:00');
-  var dow=d.getDay();
-  var esDescanso=(dow===0||dow===6)||feriado;
-  var pago=0,horas=0,atrasoH=0,descVal=0;
-  if(esDescanso){
-    var eM=toMin(entrada),sM=toMin(salida),ref=toMin('08:00');
-    // Minutos trabajados desde la hora de inicio real (ya descuenta atraso)
-    var brutMins=Math.max(0,sM-Math.max(eM,ref));
-    // Descontar 1h almuerzo si trabajó más de 4h
-    var efMins=Math.max(0,brutMins>240?brutMins-60:brutMins);
-    horas=efMins/60;
-    atrasoH=Math.round(Math.max(0,(eM-ref)/60)*10)/10;
-    // El atraso ya reduce las horas - no descontar adicionalmente
-    pago=Math.round(valorHora*2*horas*100)/100;
-    descVal=0; // ya incluido en horas
-  } else {
-    // Dia ordinario: valor dia fijo independiente de hora exacta
-    pago=valorDia;
-    horas=8;
-    atrasoH=0;
-    descVal=0;
-  }
-  return{pago:Math.round(pago*100)/100,valorDia:valorDia,valorHora:Math.round(valorHora*100)/100,esDescanso:esDescanso,horas:Math.round(horas*10)/10,atrasoH:atrasoH,descVal:descVal};
-}
-
-// resTAdmin: calcula pago total con semana integral
-// - Dias L-V normales: valorDia fijo
-// - Dias feriado/descanso: horas * valorHora * 2
-// - Semana integral: si hay >=1 dia L-V en la semana -> +2 dias bono
+// resTAdmin: calcula pago con semana integral
+// Semana integral: si trabaja los 5 dias L-V sin faltas -> +2 dias bono (S y D)
 function resTAdmin(tId,sueldo,desde,hasta){
   sueldo=sueldo||500;
   var valorDia=Math.round((sueldo/30)*100)/100;
@@ -288,15 +245,12 @@ function resTAdmin(tId,sueldo,desde,hasta){
     if(hasta&&a.fecha>hasta)return false;
     return true;
   });
+  // Agrupar por semana (clave = lunes de esa semana)
   var semanas={};
   var diasSet={};
-  var pagoTotal=0;
   asist.forEach(function(a){
-    var c=calcPAdminFer(a.fecha,a.entrada,a.salida,a.feriado,sueldo);
-    pagoTotal+=c.pago;
     var d=new Date(a.fecha+'T12:00:00');
     var dow=d.getDay();
-    // Solo dias L-V cuentan para semana integral
     if(dow>=1&&dow<=5){
       var lunes=new Date(d);
       lunes.setDate(d.getDate()-(dow-1));
@@ -307,29 +261,22 @@ function resTAdmin(tId,sueldo,desde,hasta){
     diasSet[a.fecha]=true;
   });
   var diasTrabajados=Object.keys(diasSet).length;
-  var semanasIntegrales=0,bonoDias=0,bonoPago=0;
+  var semanasIntegrales=0,bonoDias=0;
   Object.keys(semanas).forEach(function(k){
-    if(semanas[k]>=1){semanasIntegrales++;bonoDias+=2;bonoPago+=2*valorDia;}
+    if(semanas[k]>=1){semanasIntegrales++;bonoDias+=2;} // Bono siempre que trabaje al menos 1 dia de esa semana
   });
-  pagoTotal=Math.round((pagoTotal+bonoPago)*100)/100;
   var totalDias=diasTrabajados+bonoDias;
-  return{pago:pagoTotal,diasTrabajados:diasTrabajados,semanasIntegrales:semanasIntegrales,bonoDias:bonoDias,bonoPago:bonoPago,totalDias:totalDias,valorDia:valorDia};
+  var pago=Math.round(totalDias*valorDia*100)/100;
+  return{pago:pago,diasTrabajados:diasTrabajados,semanasIntegrales:semanasIntegrales,bonoDias:bonoDias,totalDias:totalDias,valorDia:valorDia};
 }
 
 function calcP(fecha,entrada,salida,feriado){
-  // Bodega: dia ordinario $20, feriado/S/D $25
-  // Jornada: 08:00-18:00 = 9h efectivas (10h brutos - 1h almuerzo)
-  // Tarifa hora = tar/9. Si trabaja menos -> pago proporcional
   const d=new Date(fecha+'T12:00:00');const dow=d.getDay();const fin=dow===0||dow===6;
   const tar=(fin||feriado)?25:20;const th=tar/9;
   const eM=toMin(entrada),sM=toMin(salida),ref=toMin('08:00');
-  const trab=Math.max(0,sM-Math.max(eM,ref));
-  const ef=Math.max(0,trab-60); // descuenta 1h almuerzo
-  const h=ef/60;
-  const pago=Math.min(tar,h*th); // cap at full tarifa
-  const aH=Math.max(0,(eM-ref)/60); // horas de atraso
-  const dV=aH*th; // descuento por atraso ya incluido en h
-  return{pago:Math.round(pago*100)/100,horas:Math.round(h*10)/10,tarifa:tar,fin,feriado,atrasoH:Math.round(aH*10)/10,descVal:Math.round(dV*100)/100};
+  const trab=Math.max(0,sM-Math.max(eM,ref));const ef=Math.max(0,trab-60);const h=ef/60;
+  const pago=Math.min(tar,h*th);const aH=(Math.max(0,eM-ref))/60;const dV=aH*th;
+  return{pago:Math.round(pago*100)/100,horas:Math.round(h*10)/1,tarifa:tar,fin,feriado,atrasoH:Math.round(aH*10)/10,descVal:Math.round(dV*100)/100};
 }
 function resT(tId,desde,hasta){
   const as=CACHE.asistencias.filter(a=>{if(a.tId!==tId)return false;if(desde&&a.fecha<desde)return false;if(hasta&&a.fecha>hasta)return false;return true;});
@@ -432,7 +379,7 @@ function setTab(id){
   document.getElementById('pg-'+id)?.classList.add('show');
   document.getElementById('bt-'+id)?.classList.add('act');
   const r={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,faltas:rFaltas,historial:rHist,bajas:rBajas,marc_admin:rMarcAdmin,faltas_admin:rFaltasAdmin,hist_admin:rHistAdmin,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,transferencias:rTrans,personal:rPers,admin_evt:rAdminEvt,jlnegra:rJLN};
-  try{if(r[id])r[id]();}catch(e){console.error('setTab error en',id,':',e);document.getElementById('pg-'+id).innerHTML='<div class="empty" style="color:var(--r)">Error cargando: '+e.message+'</div>';}
+  if(r[id])r[id]();
 }
 window.setTab=setTab;
 function pg(id,html){const el=document.getElementById('pg-'+id);if(el)el.innerHTML=html}
@@ -444,7 +391,6 @@ function stars(n){return[1,2,3,4,5,6,7,8,9,10].map(i=>'<span style="font-size:15
 // RRHH - TRABAJADORES
 // Uso data-id en botones para evitar problemas de escape con IDs de Firestore
 function rT(){
-  try{
   var todos=CACHE.trabajadores.filter(function(t){return t.estado!=='archivado';});
   var activos=todos.filter(function(t){return t.estado==='activo'||t.estado==='contrato';});
   var inactivos=todos.filter(function(t){return t.estado==='baja';});
@@ -486,7 +432,6 @@ function rT(){
       ?'<div style="font-size:11px;font-weight:700;color:var(--a);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;padding-left:2px">Inactivos ('+inactivos.length+')</div>'+inactivos.map(wCard).join('')
       :'')
   );
-  }catch(e){pg('trabajadores','<div class="empty" style="color:var(--r)">Error: '+e.message+'</div>');console.error('rT error:',e);}
 }
 window.togActivo=async function(id,nuevoEstado){
   var t=CACHE.trabajadores.find(function(x){return x.id===id;});
@@ -531,7 +476,7 @@ function mTrab(id){
     '<div class="sep"></div><p style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Datos bancarios</p>'+
     '<div class="field" style="margin-bottom:10px"><label>Banco</label><select id="tbco">'+selOpts(BANCOS,t.banco)+'</select></div>'+
     '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Tipo</label><select id="ttipo"><option'+(t.tipoCuenta==='Ahorros'?' selected':'')+'>Ahorros</option><option'+(t.tipoCuenta==='Corriente'?' selected':'')+'>Corriente</option></select></div><div class="field"><label># Cuenta</label><input id="tcta" value="'+(t.cuenta||'')+'"></div></div>'+
-    '<div class="brow" style="justify-content:flex-end;margin-top:4px"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" id="btnGT" data-id="'+(id||'')+'" onclick="guardT(this.dataset.id)">Guardar</button></div>');
+    '<div class="brow" style="justify-content:flex-end;margin-top:4px"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" id="btnGT" onclick="guardT(\''+( id||'')+'\')">Guardar</button></div>');
 }
 window.mTrab=mTrab;
 
@@ -543,7 +488,7 @@ async function guardT(id){
   var sueldoEl=document.getElementById('tsueldo');var sueldoVal=sueldoEl?parseFloat(sueldoEl.value)||0:0;
   const d={nombres:n,cedula:c,tel:document.getElementById('ttel').value.trim(),email:document.getElementById('tem').value.trim(),dir:document.getElementById('tdir').value.trim(),area:document.getElementById('ta').value,cargo:document.getElementById('tcar').value,fechaIngreso:document.getElementById('tfi').value,banco:document.getElementById('tbco').value,tipoCuenta:document.getElementById('ttipo').value,cuenta:document.getElementById('tcta').value.trim(),sueldo:sueldoVal};
   try{
-    if(id&&id!==''){
+    if(id){
       await fupd('trabajadores',id,d);
       toast('Trabajador actualizado correctamente');
     } else {
@@ -661,7 +606,7 @@ window.gEdN=gEdN;
 let mFecha=hoy(),mMap={},mFechaLoaded='';
 
 function rM(){
-  const act=CACHE.trabajadores.filter(function(t){return t.estado==='activo'&&t.area==='BODEGA';});
+  const act=CACHE.trabajadores.filter(function(t){return t.estado==='activo';});
   const bajas=CACHE.trabajadores.filter(function(t){return t.estado==='baja'&&t.fechaBaja&&((new Date()-new Date(t.fechaBaja+'T12:00:00'))/86400000)<7;});
   const d=new Date(mFecha+'T12:00:00');
   const eFin=d.getDay()===0||d.getDay()===6;
@@ -771,7 +716,7 @@ window.updC=function(tId,eFin){
 };
 
 window.guardDia=async function(){
-  var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo'&&t.area==='BODEGA';});
+  var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo';});
   var btns=document.querySelectorAll('[onclick="guardDia()"]');
   btns.forEach(function(b){b.disabled=true;b.textContent='Guardando...';});
   try{
@@ -968,86 +913,152 @@ function rInf(){
   pg('informe','<div class="stit" style="margin-bottom:12px">Informe por periodo</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="id" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="ih" value="'+iH+'" onchange="iH=this.value"></div></div><div class="field" style="margin-bottom:12px"><label>Area</label><select id="ia" onchange="iA=this.value"><option value="">Todas las areas</option>'+selOpts(AREAS,iA)+'</select></div><button class="btn bg bfull" onclick="genInf()">Generar informe</button></div><div id="inf-res"></div>');
 }
 window.genInf=function(){
-  var desde=document.getElementById('id').value,hasta=document.getElementById('ih').value,area=document.getElementById('ia').value;
+  const desde=document.getElementById('id').value,hasta=document.getElementById('ih').value,area=document.getElementById('ia').value;
   iD=desde;iH=hasta;iA=area;
-  var d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
-  var per=d1.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'})+' al '+d2.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
-  // BODEGA
-  var bodegaT=CACHE.trabajadores.filter(function(t){return t.area==='BODEGA'&&(!area||area==='BODEGA');});
-  var bD=0,bP=0,bDes=0,bN=0;
-  var bodegaRows=bodegaT.map(function(t){
-    var r=resT(t.id,desde,hasta);
-    if(!r.dias)return'';
-    bN++;bD+=r.dias;bP+=r.pago;bDes+=r.descVal;
-    return '<tr><td class="tc">'+bN+'</td><td><strong>'+t.nombres+'</strong></td>'+
-      '<td style="font-family:monospace;font-size:11px">'+t.cedula+'</td>'+
-      '<td style="font-size:11px">'+t.cargo+'</td>'+
-      '<td style="white-space:nowrap">'+fmtF(t.fechaIngreso)+'</td>'+
-      '<td class="tc">Por dia</td>'+
-      '<td class="tr">L-V: $20 / S,D,F: $25</td>'+
-      '<td class="tc">'+r.dias+'</td>'+
-      '<td class="tr'+(r.atrasoH>0?' dc':'')+'">'+( r.atrasoH>0?r.atrasoH+'h -$'+r.descVal.toFixed(2):'--')+'</td>'+
-      '<td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>';
-  }).filter(Boolean);
-  // ADMINISTRACION
-  var adminT=CACHE.trabajadores.filter(function(t){return t.area==='ADMINISTRACION'&&(!area||area==='ADMINISTRACION');});
-  var aD=0,aP=0,aN=0;
-  var adminRows=adminT.map(function(t){
-    var r=resTAdmin(t.id,t.sueldo||500,desde,hasta);
-    if(!r.diasTrabajados&&!r.bonoDias)return'';
-    aN++;aD+=r.totalDias;aP+=r.pago;
-    return '<tr><td class="tc">'+aN+'</td><td><strong>'+t.nombres+'</strong></td>'+
-      '<td style="font-family:monospace;font-size:11px">'+t.cedula+'</td>'+
-      '<td style="font-size:11px">'+t.cargo+'</td>'+
-      '<td style="white-space:nowrap">'+fmtF(t.fechaIngreso)+'</td>'+
-      '<td class="tc">Mensualizado</td>'+
-      '<td class="tr">$'+(t.sueldo||0)+'/mes · $'+r.valorDia.toFixed(2)+'/dia</td>'+
-      '<td class="tc">'+r.diasTrabajados+(r.bonoDias>0?' +'+r.bonoDias+'b':'')+'</td>'+
-      '<td class="tr">--</td>'+
-      '<td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>';
-  }).filter(Boolean);
-  var hayBodega=bodegaRows.length>0;
-  var hayAdmin=adminRows.length>0;
-  if(!hayBodega&&!hayAdmin){document.getElementById('inf-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return;}
-  var out='<div class="ihdr"><div class="iemp">XURI S.A. - Nomina mensual</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div>';
-  if(hayBodega){
-    out+='<div style="font-size:12px;font-weight:700;color:var(--v);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px">Bodega</div>'+
-    '<div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Tipo</th><th>Tarifa</th><th>Dias</th><th>Atrasos</th><th>Total</th></tr></thead><tbody>'+
-    bodegaRows.join('')+
-    '<tr class="tot"><td colspan="7" style="text-align:right;padding-right:12px">TOTALES BODEGA</td><td class="tc">'+bD+'</td><td class="tr">'+(bDes>0?'-$'+bDes.toFixed(2):'--')+'</td><td class="tr">$'+bP.toFixed(2)+'</td></tr>'+
-    '</tbody></table></div>';
-  }
-  if(hayAdmin){
-    out+='<div style="font-size:12px;font-weight:700;color:var(--v);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px">Administracion</div>'+
-    '<div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Tipo</th><th>Sueldo/Dia</th><th>Dias+Bono</th><th>Desc</th><th>Total</th></tr></thead><tbody>'+
-    adminRows.join('')+
-    '<tr class="tot"><td colspan="7" style="text-align:right;padding-right:12px">TOTALES ADMIN</td><td class="tc">'+aD+'</td><td class="tr">--</td><td class="tr">$'+aP.toFixed(2)+'</td></tr>'+
-    '</tbody></table></div>';
-  }
-  if(hayBodega&&hayAdmin){
-    out+='<div style="background:var(--v);color:#fff;border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;margin-top:8px"><strong>TOTAL GENERAL</strong><strong>$'+(bP+aP).toFixed(2)+'</strong></div>';
-  }
-  out+='<button class="btn bb" style="margin-top:10px" data-desde="'+desde+'" data-hasta="'+hasta+'" data-area="'+area+'" onclick="impr(\'nomina\',this.dataset.desde,this.dataset.hasta,this.dataset.area)">Imprimir nomina</button>';
-  document.getElementById('inf-res').innerHTML=out;
-}
+  const tr=CACHE.trabajadores.filter(t=>!area||t.area===area);
+  let tD=0,tP=0,tDes=0,n=0;
+  const fi=tr.map(t=>{const r=resT(t.id,desde,hasta);if(!r.dias)return'';n++;tD+=r.dias;tP+=r.pago;tDes+=r.descVal;
+    return'<tr><td class="tc">'+n+'</td><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+t.cargo+'</td><td style="white-space:nowrap">'+fmtF(t.fechaIngreso)+'</td><td class="tc">240</td><td><span class="chip">'+t.area+'</span></td><td class="tr">$20.00</td><td class="tc">'+r.dias+'</td><td class="tr'+(r.descVal>0?' dc':'')+'">'+( r.atrasoH>0?r.atrasoH+'h -$'+r.descVal.toFixed(2):'--')+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>';}).filter(Boolean);
+  if(!fi.length){document.getElementById('inf-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
+  const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
+  const per=d1.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'})+' al '+d2.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('inf-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nomina mensual</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Faltas</th><th>Justif.</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="10" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button class="btn bb" onclick="impr(\'nomina\',\''+desde+'\',\''+hasta+'\',\''+area+'\')">Imprimir nomina</button>';
+};
 
+// JEFE RRHH - FALTAS / AUSENCIAS
+// Muestra dias en que un trabajador activo NO fue marcado, con opcion de justificar
+let fF='',fH='',fArea='';
+function rFaltas(){
+  var n=new Date();
+  if(!fF)fF=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);
+  if(!fH)fH=hoy();
+  pg('faltas',
+    '<div class="stit" style="margin-bottom:12px">Faltas y ausencias</div>'+
+    '<div class="card">'+
+      '<div class="fg fg2" style="margin-bottom:10px">'+
+        '<div class="field"><label>Desde</label><input type="date" id="ff" value="'+fF+'" onchange="fF=this.value"></div>'+
+        '<div class="field"><label>Hasta</label><input type="date" id="fh" value="'+fH+'" onchange="fH=this.value"></div>'+
+      '</div>'+
+      '<div class="field" style="margin-bottom:12px"><label>Area</label>'+
+        '<select id="farea" onchange="fArea=this.value"><option value="">Todas las areas</option>'+selOpts(AREAS,fArea)+'</select>'+
+      '</div>'+
+      '<button class="btn bg bfull" onclick="genFaltas()">Ver faltas</button>'+
+    '</div>'+
+    '<div id="faltas-res"></div>');
+}
+window.genFaltas=function(){
+  fF=document.getElementById('ff').value;
+  fH=document.getElementById('fh').value;
+  fArea=document.getElementById('farea').value;
+  // Generar lista de dias laborables en el rango
+  var dias=[];
+  var cur=new Date(fF+'T12:00:00');
+  var fin=new Date(fH+'T12:00:00');
+  while(cur<=fin){
+    dias.push(cur.toISOString().slice(0,10));
+    cur.setDate(cur.getDate()+1);
+  }
+  // Trabajadores activos (y algunos inactivos que estuvieron activos en el periodo)
+  var trabjs=CACHE.trabajadores.filter(function(t){
+    return !fArea||t.area===fArea;
+  }).filter(function(t){
+    return t.estado==='activo'||t.estado==='baja'||t.estado==='contrato';
+  });
+  // Para cada trabajador, calcular dias que debio trabajar vs dias marcados
+  var resultado=[];
+  trabjs.forEach(function(t){
+    var ingreso=t.fechaIngreso||'2000-01-01';
+    var baja=t.fechaBaja||'9999-12-31';
+    var diasDebio=dias.filter(function(d){return d>=ingreso&&d<=baja;});
+    var diasMarcados=CACHE.asistencias.filter(function(a){return a.tId===t.id&&a.fecha>=fF&&a.fecha<=fH;}).map(function(a){return a.fecha;});
+    var faltasDias=diasDebio.filter(function(d){return diasMarcados.indexOf(d)<0;});
+    if(faltasDias.length>0){
+      resultado.push({t:t,faltas:faltasDias,marcados:diasMarcados.length,debio:diasDebio.length});
+    }
+  });
+  var el=document.getElementById('faltas-res');
+  if(!resultado.length){
+    el.innerHTML='<div class="empty" style="margin-top:12px">Sin faltas en el periodo seleccionado</div>';
+    return;
+  }
+  var totalFaltas=resultado.reduce(function(s,r){return s+r.faltas.length;},0);
+  el.innerHTML=
+    '<div style="background:#fef3e2;border:1px solid #f5d89a;border-radius:10px;padding:12px 14px;margin:12px 0;display:flex;justify-content:space-between;align-items:center">'+
+      '<span style="font-weight:700;color:#7d4e00">'+resultado.length+' trabajador'+(resultado.length!==1?'es':'')+' con faltas</span>'+
+      '<span style="font-size:18px;font-weight:800;color:#7d4e00">'+totalFaltas+' dia'+(totalFaltas!==1?'s':'')+' total</span>'+
+    '</div>'+
+    resultado.map(function(r){
+      var rowsFaltas=r.faltas.slice(0,10).map(function(d){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f9f0e0">'+
+          '<span style="font-size:12px;color:#7d4e00">'+fmtF(d)+'</span>'+
+          '<button class="btn bo bsm" style="font-size:11px;padding:4px 10px" data-tid="'+r.t.id+'" data-fecha="'+d+'" onclick="mJustif(this.dataset.tid,this.dataset.fecha)">Justificar</button>'+
+        '</div>';
+      }).join('');
+      var masStr=r.faltas.length>10?'<div style="font-size:11px;color:var(--t3);padding:4px 0">...y '+(r.faltas.length-10)+' dia'+(r.faltas.length-10!==1?'s':'')+' más</div>':'';
+      return '<div class="card" style="margin-bottom:10px;border-color:#f5d89a">'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+          '<div class="av av-r" style="width:36px;height:36px;font-size:12px">'+inic(r.t.nombres)+'</div>'+
+          '<div style="flex:1">'+
+            '<div style="font-weight:700;font-size:13px">'+r.t.nombres+'</div>'+
+            '<div style="font-size:11px;color:var(--t2)">'+r.t.area+' · Marcados: '+r.marcados+' · Faltas: <strong style="color:var(--r)">'+r.faltas.length+'</strong></div>'+
+          '</div>'+
+        '</div>'+
+        rowsFaltas+masStr+
+      '</div>';
+    }).join('');
+};
+window.mJustif=function(tId,fecha){
+  var t=CACHE.trabajadores.find(function(x){return x.id===tId;});
+  window._justifId=tId;window._justifFecha=fecha;
+  openModal('Justificar falta',
+    '<p style="font-weight:700;margin-bottom:4px">'+t.nombres+'</p>'+
+    '<p style="font-size:12px;color:var(--t2);margin-bottom:12px">'+fmtF(fecha)+'</p>'+
+    '<div class="field" style="margin-bottom:10px"><label>Tipo de ausencia</label>'+
+      '<select id="jTipo">'+
+        '<option>Enfermedad</option>'+
+        '<option>Permiso personal</option>'+
+        '<option>Permiso autorizado</option>'+
+        '<option>Calamidad domestica</option>'+
+        '<option>Abandono sin aviso</option>'+
+        '<option>Otro</option>'+
+      '</select>'+
+    '</div>'+
+    '<div class="field" style="margin-bottom:14px"><label>Observacion</label>'+
+      '<textarea id="jObs" placeholder="Detalle adicional..."></textarea>'+
+    '</div>'+
+    '<div class="brow" style="justify-content:flex-end">'+
+      '<button class="btn bgr" onclick="closeModal()">Cancelar</button>'+
+      '<button class="btn bo" onclick="confJustif()">Registrar justificacion</button>'+
+    '</div>');
+};
+window.confJustif=async function(){
+  var tId=window._justifId,fecha=window._justifFecha;
+  if(!tId||!fecha)return;
+  var tipo=document.getElementById('jTipo').value;
+  var obs=document.getElementById('jObs').value;
+  // Guardar como asistencia con entrada/salida especial y obs de justificacion
+  await fadd('asistencias',{tId:tId,fecha:fecha,entrada:'00:00',salida:'00:00',feriado:false,obs:'[JUSTIF:'+tipo+'] '+obs,justificado:true});
+  window._justifId=null;window._justifFecha=null;
+  closeModal();
+  toast('Justificacion registrada correctamente');
+};
+
+function rTrans(){
+  const n=new Date();if(!iD)iD=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);if(!iH)iH=hoy();
+  pg('transferencias','<div class="stit" style="margin-bottom:12px">Detalle para transferencias</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="td" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="th2" value="'+iH+'" onchange="iH=this.value"></div></div><button class="btn bg bfull" onclick="genTrans()">Generar detalle</button></div><div id="trans-res"></div>');
+}
 window.genTrans=function(){
   const desde=document.getElementById('td').value,hasta=document.getElementById('th2').value;
   iD=desde;iH=hasta;
   let tot=0;const conC=[],sinC=[];
-  CACHE.trabajadores.forEach(function(t){
-    var r;
-    if(t.area==='ADMINISTRACION'){r=resTAdmin(t.id,t.sueldo||500,desde,hasta);if(!r.diasTrabajados&&!r.bonoDias)return;r.dias=r.totalDias;}
-    else{r=resT(t.id,desde,hasta);if(!r.dias)return;}
-    if(!t.cuenta)sinC.push({t,r});else{conC.push({t,r});tot+=r.pago;}
-  });
+  CACHE.trabajadores.forEach(t=>{const r=resT(t.id,desde,hasta);if(!r.dias)return;if(!t.cuenta)sinC.push({t,r});else{conC.push({t,r});tot+=r.pago;}});
   if(!conC.length&&!sinC.length){document.getElementById('trans-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
   document.getElementById('trans-res').innerHTML='<div style="background:var(--vc);border:1px solid #b8d8b8;border-radius:12px;padding:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700;color:var(--v)">'+conC.length+' transferencia'+(conC.length!==1?'s':'')+'</span><span style="font-size:20px;font-weight:800;color:var(--v)">$'+tot.toFixed(2)+'</span></div>'+
   (sinC.length?'<div class="alerto" style="margin-bottom:10px"><strong>Sin cuenta ('+sinC.length+'):</strong> '+sinC.map(f=>f.t.nombres).join(', ')+'</div>':'')+
   '<div class="iwrap"><table><thead><tr><th>Nombres</th><th>Cedula</th><th>Banco</th><th>Tipo</th><th># Cuenta</th><th>Dias</th><th>Total</th></tr></thead><tbody>'+
   conC.map(({t,r})=>'<tr><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+( t.banco||'--')+'</td><td style="font-size:11px">'+(t.tipoCuenta||'--')+'</td><td style="font-family:monospace;font-size:11px">'+t.cuenta+'</td><td class="tc">'+r.dias+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>').join('')+
   '<tr class="tot"><td colspan="6" style="text-align:right;padding-right:12px">TOTAL</td><td class="tr">$'+tot.toFixed(2)+'</td></tr></tbody></table></div>'+
-  '<button class="btn bb" style="margin-top:10px" data-desde="'+desde+'" data-hasta="'+hasta+'" onclick="impr(\'transferencias\',this.dataset.desde,this.dataset.hasta,\'\')">Imprimir detalle</button>';
+  '<button class="btn bb" style="margin-top:10px" onclick="impr(\'transferencias\',\''+desde+'\',\''+hasta+'\',\'\')">Imprimir detalle</button>';
 };
 function rPers(){
   pg('personal',
@@ -1148,7 +1159,7 @@ window.verHistAdmin=function(id){
   var t=CACHE.trabajadores.find(function(x){return x.id===id;});
   if(!t)return;
   var asist=[...CACHE.asistencias.filter(function(a){return a.tId===id;})].sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
-  var r=resTAdmin(id,t.sueldo||500,'','');
+  var r=resT(id,'','');
   var rows=asist.length
     ? asist.map(function(a){
         var c=calcP(a.fecha,a.entrada,a.salida,a.feriado);
@@ -1208,4 +1219,325 @@ window.impr=function(tipo,desde,hasta,area){
   const el=document.getElementById(tipo==='nomina'?'inf-res':'trans-res');
   if(!el?.innerHTML){toast('Genera el informe primero','err');return}
   const w=window.open('','_blank');
-  w.document.write('
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>XURI</title><style>*{box-sizing:border-box}body{font-family:sans-serif;font-size:11px;padding:20px;color:#111}table{width:100%;border-collapse:collapse}th{background:#1a5c32;color:#fff;padding:7px 8px;text-align:left;font-size:10px}td{padding:6px 8px;border-bottom:1px solid #eee}tr.tot td{background:#1a5c32;color:#fff;font-weight:700;border:none}.tr{text-align:right}.tc{text-align:center}.chip{background:#e8f3e8;color:#1a5c32;padding:1px 6px;border-radius:99px;font-size:10px;font-weight:700}button{display:none}.ihdr{background:#1a5c32;color:#fff;padding:12px;border-radius:4px 4px 0 0;margin-bottom:0}.ihdr h3,.ihdr .iemp,.ihdr .iper{color:rgba(255,255,255,.9)}@media print{button{display:none}}</style></head><body><p style="font-size:9px;color:#888;margin-bottom:4px">EMPRESA: XURI S.A. - PROCESO: NOMINA MENSUAL - TRABAJADORES EVENTUALES</p>'+el.innerHTML+'<p style="margin-top:16px;font-size:10px;color:#aaa">Generado: '+new Date().toLocaleString('es-EC')+'</p></body></html>');
+  w.document.close();setTimeout(()=>w.print(),400);
+};
+
+// ════════════════════════════════════════════
+// JEFE ADMIN - Marcacion de administrativos
+// Misma logica que bodega, filtrado por area ADMINISTRACION
+// ════════════════════════════════════════════
+let aFecha=hoy(),aMap={},aFechaLoaded='';
+
+function rMarcAdmin(){
+  var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo'&&t.area==='ADMINISTRACION';});
+  var d=new Date(aFecha+'T12:00:00');
+  var eFin=d.getDay()===0||d.getDay()===6;
+
+  if(aFechaLoaded!==aFecha){
+    aFechaLoaded=aFecha;
+    aMap={};
+    CACHE.asistencias.filter(function(a){return a.fecha===aFecha;}).forEach(function(a){
+      if(act.find(function(t){return t.id===a.tId;}))
+        aMap[a.tId]={presente:true,entrada:a.entrada,salida:a.salida,feriado:a.feriado,obs:a.obs||''};
+    });
+  } else {
+    CACHE.asistencias.filter(function(a){return a.fecha===aFecha;}).forEach(function(a){
+      if(!aMap[a.tId]&&act.find(function(t){return t.id===a.tId;}))
+        aMap[a.tId]={presente:true,entrada:a.entrada,salida:a.salida,feriado:a.feriado,obs:a.obs||''};
+    });
+  }
+
+  var rows=act.map(function(t){
+    var m=aMap[t.id]||{presente:false,entrada:'08:00',salida:'17:00',feriado:eFin,obs:''};
+    var valorDia=calcPAdmin(t.sueldo||500);
+    var pagoHtml=m.presente?'<div class="mpago">$'+valorDia.toFixed(2)+'</div><div style="font-size:10px;color:var(--t2)">1 dia</div>':'';
+    var eFinVal=eFin?1:0;
+    return '<div class="mcard'+(m.presente?' pre':'')+'" id="ama-'+t.id+'">'+
+      '<div class="mtop">'+
+        '<div class="mchk'+(m.presente?' on':'')+'" id="amchk-'+t.id+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onclick="togABtn(this)">'+(m.presente?'&#x2713;':'')+'</div>'+
+        '<div style="flex:1"><div class="mname">'+t.nombres+'</div><div class="marea">'+t.cargo+'</div></div>'+
+        '<div id="apd-'+t.id+'" style="text-align:right">'+pagoHtml+'</div>'+
+      '</div>'+
+      '<div class="mdet'+(m.presente?' show':'')+'" id="amdet-'+t.id+'">'+
+        '<div class="mtimes">'+
+          '<div class="field"><label>Entrada</label><input type="time" id="aent-'+t.id+'" value="'+m.entrada+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updABtn(this)"></div>'+
+          '<div class="field"><label>Salida</label><input type="time" id="asal-'+t.id+'" value="'+m.salida+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updABtn(this)"></div>'+
+        '</div>'+
+        '<label class="mfer-row"><input type="checkbox" id="afer-'+t.id+'" '+(m.feriado?'checked':'')+' data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updABtn(this)" style="width:18px;height:18px;accent-color:var(--v)"><span>Feriado (tarifa $25)</span></label>'+
+        '<div class="field"><label>Observacion</label><input id="aobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div>'+
+      '</div>'+
+      (!m.presente?
+        '<div style="margin-top:8px;display:flex;gap:6px">'+
+          (m.falta
+            ? '<button class="btn bgr bsm" style="flex:1" data-id="'+t.id+'" onclick="quitarFalta(this.dataset.id,\'admin\')">&#x2715; Quitar falta</button>'
+            : '<button class="btn br bsm" style="flex:1" data-id="'+t.id+'" onclick="marcarFaltaRap(this.dataset.id,\'admin\')">&#x2717; Falta rapida</button>'+
+              '<button class="btn bo bsm" style="flex:1" data-id="'+t.id+'" onclick="marcarFaltaMot(this.dataset.id,\'admin\')">Falta + motivo</button>'
+          )+
+        '</div>'
+      :'')+
+    '</div>';
+  }).join('');
+
+  pg('marc_admin',
+    '<div class="shdr"><div><div class="stit">Marcacion - Administrativos</div><div class="ssub">'+fmtFL(aFecha)+'</div></div>'+
+    '<div class="field" style="margin:0"><input type="date" id="afd" value="'+aFecha+'" onchange="chAFecha(this.value)" style="font-size:13px;padding:7px 10px"></div></div>'+
+    (eFin?'<div class="alerto">Fin de semana - tarifa $25/dia</div>':'')+
+    (act.length ? rows : '<div class="empty">Sin administrativos eventuales activos.</div>')+
+    '<div style="position:sticky;bottom:8px;margin-top:16px;padding:4px">'+
+      '<button class="btn bg bfull" style="box-shadow:0 4px 12px rgba(26,92,50,.35);font-size:15px;padding:14px" onclick="guardAdmin()">&#x1F4BE; Guardar marcacion del dia</button>'+
+    '</div>');
+}
+
+window.chAFecha=function(f){aFecha=f;aFechaLoaded='';aMap={};rMarcAdmin();};
+
+window.togABtn=function(el){
+  var tId=el.dataset.id, eFin=el.dataset.efin==='1';
+  if(!aMap[tId])aMap[tId]={presente:false,entrada:'08:00',salida:'17:00',feriado:eFin,obs:''};
+  aMap[tId].presente=!aMap[tId].presente;
+  var m=aMap[tId];
+  var chk=document.getElementById('amchk-'+tId);
+  if(chk){chk.innerHTML=m.presente?'&#x2713;':'';chk.className='mchk'+(m.presente?' on':'');}
+  var card=document.getElementById('ama-'+tId);
+  if(card)card.className='mcard'+(m.presente?' pre':'');
+  var det=document.getElementById('amdet-'+tId);
+  if(det)det.className='mdet'+(m.presente?' show':'');
+  var pd=document.getElementById('apd-'+tId);
+  if(pd){
+    if(m.presente){
+      // Find the trabajador sueldo from CACHE
+      var tw=CACHE.trabajadores.find(function(x){return x.id===tId;});
+      var vd=calcPAdmin(tw?tw.sueldo||500:500);
+      pd.innerHTML='<div class="mpago">$'+vd.toFixed(2)+'</div><div style="font-size:10px;color:var(--t2)">1 dia</div>';
+    } else {
+      pd.innerHTML='';
+    }
+  }
+  if(m.presente)updA(tId,eFin);
+};
+
+window.updABtn=function(el){updA(el.dataset.id,el.dataset.efin==='1');};
+
+window.updA=function(tId,eFin){
+  var en=document.getElementById('aent-'+tId);
+  var sa=document.getElementById('asal-'+tId);
+  var fe=document.getElementById('afer-'+tId);
+  var enVal=en?en.value:'08:00';
+  var saVal=sa?sa.value:'17:00';
+  var feVal=fe?fe.checked:eFin;
+  // Admin: precio es fijo por dia, no depende de horas
+  if(aMap[tId]){aMap[tId].entrada=enVal;aMap[tId].salida=saVal;aMap[tId].feriado=feVal;}
+};
+
+window.guardAdmin=async function(){
+  var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo'&&t.area==='ADMINISTRACION';});
+  var btns=document.querySelectorAll('[onclick="guardAdmin()"]');
+  btns.forEach(function(b){b.disabled=true;b.textContent='Guardando...';});
+  try{
+    var registros=act.filter(function(t){return aMap[t.id]&&aMap[t.id].presente;}).map(function(t){
+      return{
+        tId:t.id,fecha:aFecha,
+        entrada:document.getElementById('aent-'+t.id)?.value||aMap[t.id].entrada,
+        salida:document.getElementById('asal-'+t.id)?.value||aMap[t.id].salida,
+        feriado:document.getElementById('afer-'+t.id)?document.getElementById('afer-'+t.id).checked:false,
+        obs:document.getElementById('aobs-'+t.id)?.value||''
+      };
+    });
+    await Promise.all(CACHE.asistencias.filter(function(a){return a.fecha===aFecha&&act.find(function(t){return t.id===a.tId;});}).map(function(a){return fdel('asistencias',a.id);}));
+    await Promise.all(registros.map(function(r){return fadd('asistencias',r);}));
+    registros.forEach(function(r){aMap[r.tId]={presente:true,entrada:r.entrada,salida:r.salida,feriado:r.feriado,obs:r.obs};});
+    aFechaLoaded=aFecha;
+    toast('Marcacion admin guardada: '+registros.length+' persona'+(registros.length!==1?'s':''));
+  }catch(e){toast('Error: '+e.message,'err');}
+  finally{btns.forEach(function(b){b.disabled=false;b.innerHTML='&#x1F4BE; Guardar marcacion del dia';});}
+};
+
+// Faltas admin - reutiliza la misma logica de genFaltas pero solo para ADMINISTRACION
+let faF='',faH='';
+function rFaltasAdmin(){
+  var n=new Date();
+  if(!faF)faF=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);
+  if(!faH)faH=hoy();
+  pg('faltas_admin',
+    '<div class="stit" style="margin-bottom:12px">Faltas - Administrativos</div>'+
+    '<div class="card">'+
+      '<div class="fg fg2" style="margin-bottom:12px">'+
+        '<div class="field"><label>Desde</label><input type="date" id="faf" value="'+faF+'" onchange="faF=this.value"></div>'+
+        '<div class="field"><label>Hasta</label><input type="date" id="fah" value="'+faH+'" onchange="faH=this.value"></div>'+
+      '</div>'+
+      '<button class="btn bg bfull" onclick="genFaltasAdmin()">Ver faltas</button>'+
+    '</div>'+
+    '<div id="faltas-admin-res"></div>');
+}
+window.genFaltasAdmin=function(){
+  faF=document.getElementById('faf').value;
+  faH=document.getElementById('fah').value;
+  var dias=[];
+  var cur=new Date(faF+'T12:00:00'),fin=new Date(faH+'T12:00:00');
+  while(cur<=fin){dias.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+  var trabjs=CACHE.trabajadores.filter(function(t){return t.area==='ADMINISTRACION'&&(t.estado==='activo'||t.estado==='baja'||t.estado==='contrato');});
+  var resultado=[];
+  trabjs.forEach(function(t){
+    var ingreso=t.fechaIngreso||'2000-01-01',baja=t.fechaBaja||'9999-12-31';
+    var diasDebio=dias.filter(function(d){return d>=ingreso&&d<=baja;});
+    var diasMarcados=CACHE.asistencias.filter(function(a){return a.tId===t.id&&a.fecha>=faF&&a.fecha<=faH;}).map(function(a){return a.fecha;});
+    var faltasDias=diasDebio.filter(function(d){return diasMarcados.indexOf(d)<0;});
+    if(faltasDias.length>0)resultado.push({t:t,faltas:faltasDias,marcados:diasMarcados.length});
+  });
+  var el=document.getElementById('faltas-admin-res');
+  if(!resultado.length){el.innerHTML='<div class="empty" style="margin-top:12px">Sin faltas en el periodo</div>';return;}
+  var totalFaltas=resultado.reduce(function(s,r){return s+r.faltas.length;},0);
+  el.innerHTML=
+    '<div style="background:#fef3e2;border:1px solid #f5d89a;border-radius:10px;padding:12px 14px;margin:12px 0;display:flex;justify-content:space-between;align-items:center">'+
+      '<span style="font-weight:700;color:#7d4e00">'+resultado.length+' admin con faltas</span>'+
+      '<span style="font-size:18px;font-weight:800;color:#7d4e00">'+totalFaltas+' dia'+(totalFaltas!==1?'s':'')+' total</span>'+
+    '</div>'+
+    resultado.map(function(r){
+      return '<div class="card" style="margin-bottom:10px;border-color:#f5d89a">'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+          '<div class="av av-r" style="width:36px;height:36px;font-size:12px">'+inic(r.t.nombres)+'</div>'+
+          '<div><div style="font-weight:700;font-size:13px">'+r.t.nombres+'</div>'+
+          '<div style="font-size:11px;color:var(--t2)">Marcados: '+r.marcados+' · Faltas: <strong style="color:var(--r)">'+r.faltas.length+'</strong></div></div>'+
+        '</div>'+
+        r.faltas.slice(0,10).map(function(d){
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f9f0e0">'+
+            '<span style="font-size:12px;color:#7d4e00">'+fmtF(d)+'</span>'+
+            '<button class="btn bo bsm" style="font-size:11px;padding:4px 10px" data-tid="'+r.t.id+'" data-fecha="'+d+'" onclick="mJustif(this.dataset.tid,this.dataset.fecha)">Justificar</button>'+
+          '</div>';
+        }).join('')+
+        (r.faltas.length>10?'<div style="font-size:11px;color:var(--t3);padding:4px 0">...y '+(r.faltas.length-10)+' dias mas</div>':'')+
+      '</div>';
+    }).join('');
+};
+
+// Historial admin
+function rHistAdmin(){
+  var act=CACHE.trabajadores.filter(function(t){return t.area==='ADMINISTRACION';});
+  var as=[...CACHE.asistencias.filter(function(a){return act.find(function(t){return t.id===a.tId;});})].sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
+  // Resumen por persona con semana integral
+  var resumenHtml=act.filter(function(t){return t.estado==='activo'||t.estado==='contrato';}).map(function(t){
+    var r=resTAdmin(t.id,t.sueldo||500,'','');
+    if(r.diasTrabajados===0)return'';
+    return '<div style="background:var(--vc);border:1px solid #b8d8b8;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'+
+      '<div>'+
+        '<div style="font-weight:700;font-size:13px">'+t.nombres+'</div>'+
+        '<div style="font-size:11px;color:var(--t2)">'+r.diasTrabajados+' dias'+
+          (r.semanasIntegrales>0?' + <strong style="color:var(--v)">'+r.bonoDias+' bono</strong> ('+r.semanasIntegrales+' sem. integral)':'')+
+        '</div>'+
+      '</div>'+
+      '<strong style="color:var(--v);font-size:15px">$'+r.pago.toFixed(2)+'</strong>'+
+    '</div>';
+  }).join('');
+  pg('hist_admin',
+    '<div class="shdr"><div class="stit">Historial administrativos</div></div>'+
+    (resumenHtml?'<div style="margin-bottom:12px">'+resumenHtml+'</div>':'')+
+    (as.length
+      ? '<div class="iwrap"><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Entrada</th><th>Atraso</th><th>Pago</th></tr></thead><tbody>'+
+        as.map(function(a){
+          var t=CACHE.trabajadores.find(function(x){return x.id===a.tId;});
+          if(!t)return'';
+          var esFalta=a.falta;
+          var esJ=a.justificado;
+          var c=(!esFalta&&!esJ)?calcPAdmin(a.fecha,a.entrada,a.salida,a.feriado,t.sueldo||500):null;
+          var pagoStr=esFalta?'<span style="color:var(--r);font-weight:700">FALTA</span>':esJ?'Justif.':'$'+c.pago.toFixed(2);
+          return '<tr>'+
+            '<td style="white-space:nowrap">'+fmtF(a.fecha)+'</td>'+
+            '<td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.cargo+'</span></td>'+
+            '<td>'+(esFalta?'<span style="color:var(--r)">Falta</span>':esJ?'<span style="color:var(--a)">Justif.</span>':a.entrada+' - '+a.salida)+'</td>'+
+            '<td class="tc">--</td>'+
+            '<td class="tr"><strong>'+pagoStr+'</strong></td>'+
+          '</tr>';
+        }).join('')+
+        '</tbody></table></div>'
+      : '<div class="empty">Sin registros de asistencia</div>')
+  );
+}
+
+
+
+// Botones de falta rápida y falta con motivo para bodega y admin
+window.marcarFaltaRap=async function(tId,modulo){
+  var fecha=modulo==='admin'?aFecha:mFecha;
+  var t=CACHE.trabajadores.find(function(x){return x.id===tId;});
+  if(!t)return;
+  // Guardar falta como asistencia con marca especial entrada/salida 00:00 y obs FALTA
+  try{
+    // Eliminar marcacion existente si hay
+    var exist=CACHE.asistencias.find(function(a){return a.tId===tId&&a.fecha===fecha;});
+    if(exist)await fdel('asistencias',exist.id);
+    await fadd('asistencias',{tId:tId,fecha:fecha,entrada:'00:00',salida:'00:00',feriado:false,obs:'[FALTA]',falta:true,justificado:false});
+    toast('Falta registrada: '+t.nombres);
+  }catch(e){toast('Error: '+e.message,'err');}
+};
+
+window.marcarFaltaMot=function(tId,modulo){
+  var t=CACHE.trabajadores.find(function(x){return x.id===tId;});
+  if(!t)return;
+  window._faltaId=tId;
+  window._faltaMod=modulo;
+  openModal('Registrar falta - '+t.nombres,
+    '<div class="field" style="margin-bottom:10px"><label>Tipo</label>'+
+      '<select id="fTipo">'+
+        '<option>Falta injustificada</option>'+
+        '<option>Enfermedad</option>'+
+        '<option>Permiso personal</option>'+
+        '<option>Permiso autorizado</option>'+
+        '<option>Calamidad domestica</option>'+
+        '<option>Abandono sin aviso</option>'+
+        '<option>Otro</option>'+
+      '</select>'+
+    '</div>'+
+    '<div class="field" style="margin-bottom:14px"><label>Observacion</label>'+
+      '<textarea id="fObs" placeholder="Detalle del motivo..."></textarea>'+
+    '</div>'+
+    '<div class="brow" style="justify-content:flex-end">'+
+      '<button class="btn bgr" onclick="closeModal()">Cancelar</button>'+
+      '<button class="btn br" onclick="confFaltaMot()">Registrar falta</button>'+
+    '</div>');
+};
+
+window.quitarFalta=async function(tId,modulo){
+  var fecha=modulo==='admin'?aFecha:mFecha;
+  var exist=CACHE.asistencias.find(function(a){return a.tId===tId&&a.fecha===fecha&&a.falta;});
+  if(exist){
+    try{
+      await fdel('asistencias',exist.id);
+      // Clear from local map
+      if(modulo==='admin'&&aMap[tId])delete aMap[tId];
+      if(modulo==='bodega'&&mMap[tId])delete mMap[tId];
+      toast('Falta eliminada');
+    }catch(e){toast('Error: '+e.message,'err');}
+  }
+};
+window.confFaltaMot=async function(){
+  var tId=window._faltaId,modulo=window._faltaMod;
+  if(!tId)return;
+  var fecha=modulo==='admin'?aFecha:mFecha;
+  var tipo=document.getElementById('fTipo').value;
+  var obs=document.getElementById('fObs').value;
+  try{
+    var exist=CACHE.asistencias.find(function(a){return a.tId===tId&&a.fecha===fecha;});
+    if(exist)await fdel('asistencias',exist.id);
+    await fadd('asistencias',{tId:tId,fecha:fecha,entrada:'00:00',salida:'00:00',feriado:false,obs:'[FALTA:'+tipo+'] '+obs,falta:true,justificado:false});
+    window._faltaId=null;window._faltaMod=null;
+    closeModal();
+    toast('Falta registrada correctamente');
+  }catch(e){toast('Error: '+e.message,'err');}
+};
+
+// INICIO
+startLS();
+// Seguridad: Si en 4 segundos no ha cargado Firebase, forzar login
+setTimeout(()=>{
+  const loader = document.getElementById('loader');
+  if(loader && loader.style.display !== 'none'){
+    loader.style.display='none';
+    document.getElementById('login').style.display='flex';
+  }
+},4000);
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+</script>
+</body>
+</html>
