@@ -958,9 +958,11 @@ window.genNomina=function(){
       // Contar días justificados para bodega
       justificados=CACHE.asistencias.filter(a=>a.tId===t.id&&a.fecha>=desde&&a.fecha<=hasta&&a.justificado).length;
     }
-    if(!r.dias)return'';n++;tD+=r.dias;tP+=r.pago;tDes+=r.descVal;
+    // Verificar días para ambos tipos: resT() usa 'dias', resTAdmin() usa 'diasTrabajados'
+    var diasTrabajados = r.dias || r.diasTrabajados || 0;
+    if(diasTrabajados===0)return'';n++;tD+=diasTrabajados;tP+=r.pago;tDes+=r.descVal;
     var jornada = t.area === 'ADMINISTRACION' ? 'Mensual' : '240';
-    return'<tr><td class="tc">'+n+'</td><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+t.cargo+'</td><td style="white-space:nowrap">'+fmtF(t.fechaIngreso)+'</td><td class="tc">'+jornada+'</td><td><span class="chip">'+t.area+'</span></td><td class="tr">'+sDiario+'</td><td class="tc">'+r.dias+'</td><td class="tr'+(r.descVal>0?' dc':'')+'">'+( r.atrasoH>0?r.atrasoH+'h -$'+r.descVal.toFixed(2):'--')+'</td><td class="tc">'+(justificados>0?justificados:'--')+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>';
+    return'<tr><td class="tc">'+n+'</td><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+t.cargo+'</td><td style="white-space:nowrap">'+fmtF(t.fechaIngreso)+'</td><td class="tc">'+jornada+'</td><td><span class="chip">'+t.area+'</span></td><td class="tr">'+sDiario+'</td><td class="tc">'+diasTrabajados+'</td><td class="tr'+(r.descVal>0?' dc':'')+'">'+( r.atrasoH>0?r.atrasoH+'h -$'+r.descVal.toFixed(2):'--')+'</td><td class="tc">'+(justificados>0?justificados:'--')+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>';
   }).filter(Boolean);
   if(!fi.length){document.getElementById('nom-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
   const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
@@ -1459,6 +1461,19 @@ window.genFaltasAdmin=function(){
 function rHistAdmin(){
   var act=CACHE.trabajadores.filter(function(t){return t.area==='ADMINISTRACION';});
   var as=[...CACHE.asistencias.filter(function(a){return act.find(function(t){return t.id===a.tId;});})].sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
+  
+  // Debug: mostrar información en consola
+  console.log('DEBUG rHistAdmin - Trabajadores ADMIN:', act.length);
+  console.log('DEBUG rHistAdmin - Asistencias filtradas:', as.length);
+  console.log('DEBUG rHistAdmin - Total asistencias en CACHE:', CACHE.asistencias.length);
+  
+  // Forzar actualización si hay trabajadores pero no asistencias
+  if(act.length > 0 && as.length === 0 && CACHE.asistencias.length > 0) {
+    console.log('DEBUG: Forzando recálculo de asistencias');
+    // Reintentar el filtrado
+    as = CACHE.asistencias.filter(function(a){return act.find(function(t){return t.id===a.tId;});});
+    console.log('DEBUG: Asistencias después de reintentar:', as.length);
+  }
   // Resumen por persona con semana integral
   var resumenHtml=act.filter(function(t){return t.estado==='activo'||t.estado==='contrato';}).map(function(t){
     var r=resTAdmin(t.id,t.sueldo||500,'','');
