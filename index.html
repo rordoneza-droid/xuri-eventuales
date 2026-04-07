@@ -1460,7 +1460,7 @@ function rHistAdmin(){
   // Resumen por persona con semana integral
   var resumenHtml=act.filter(function(t){return t.estado==='activo'||t.estado==='contrato';}).map(function(t){
     var r=resTAdmin(t.id,t.sueldo||500,'','');
-    if(r.diasTrabajados===0)return'';
+    // Mostrar siempre los trabajadores activos, incluso si no tienen días trabajados
     return '<div style="background:var(--vc);border:1px solid #b8d8b8;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'+
       '<div>'+
         '<div style="font-weight:700;font-size:13px">'+t.nombres+'</div>'+
