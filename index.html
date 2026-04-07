@@ -606,7 +606,7 @@ window.gEdN=gEdN;
 let mFecha=hoy(),mMap={},mFechaLoaded='';
 
 function rM(){
-  const act=CACHE.trabajadores.filter(function(t){return t.estado==='activo';});
+  const act=CACHE.trabajadores.filter(function(t){return t.estado==='activo'&&t.area==='BODEGA';});
   const bajas=CACHE.trabajadores.filter(function(t){return t.estado==='baja'&&t.fechaBaja&&((new Date()-new Date(t.fechaBaja+'T12:00:00'))/86400000)<7;});
   const d=new Date(mFecha+'T12:00:00');
   const eFin=d.getDay()===0||d.getDay()===6;
