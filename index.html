@@ -45,7 +45,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .hright{display:flex;align-items:center;gap:8px}
 .hrol{font-size:10px;background:rgba(255,255,255,.18);padding:3px 10px;border-radius:99px;white-space:nowrap}
 .bout{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
-.sdot{width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+.sdot{width:8px;height:8px;border-radius:50%;background:#f87171;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .bnav{display:flex;background:var(--w);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom);flex-shrink:0}
 .btab{flex:1;padding:10px 4px 8px;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-family:inherit;color:var(--t3);font-size:10px;font-weight:600}
@@ -215,15 +215,22 @@ async function fdel(col,id){return await deleteDoc(doc(db,col,id))}
 let uns=[];
 function startLS(){
   uns.forEach(u=>u());uns=[];
-  ['trabajadores','asistencias','listaNegra','periodos'].forEach(col=>{
+  const cols = ['trabajadores','asistencias','listaNegra','periodos'];
+  cols.forEach(col=>{
     const u=onSnapshot(query(COL[col](),orderBy('_ts','asc')),snap=>{
       CACHE[col]=snap.docs.map(d=>({...d.data(),id:d.id}));
       CACHE._loaded[col]=true;
-      document.getElementById('sdot').style.background='#4ade80';
-      const allLoaded=Object.keys(CACHE._loaded).length===4;
-      if(allLoaded){document.getElementById('loader').style.display='none';document.getElementById('login').style.display='flex';}
+      if(document.getElementById('sdot')) document.getElementById('sdot').style.background='#4ade80';
+      const allLoaded = cols.filter(c => CACHE._loaded[c]).length === 4;
+      if(allLoaded){
+        document.getElementById('loader').style.display='none';
+        document.getElementById('login').style.display='flex';
+      }
       if(ROL)setTab(tabActual);
-    },()=>{document.getElementById('sdot').style.background='#f87171';});
+    },(err)=>{
+      console.error(err);
+      if(document.getElementById('sdot')) document.getElementById('sdot').style.background='#f87171';
+    });
     uns.push(u);
   });
 }
@@ -250,7 +257,7 @@ window.logout=logout;
 function initApp(){
   const mod=MODS[ROL];
   document.getElementById('pages').innerHTML=mod.tabs.map(t=>'<div class="page" id="pg-'+t.id+'"></div>').join('');
-  document.getElementById('bnav').innerHTML=mod.tabs.map((t,i)=>'<button class="btab'+(i===0?' act':'')+'" id="bt-'+t.id+'" onclick="setTab(''+t.id+'')"><div class="bbar"></div><span class="bico">'+t.ico+'</span><span>'+t.lbl+'</span></button>').join('');
+  document.getElementById('bnav').innerHTML=mod.tabs.map((t,i)=>'<button class="btab'+(i===0?' act':'')+'" id="bt-'+t.id+'" onclick="setTab(\''+t.id+'\')"><div class="bbar"></div><span class="bico">'+t.ico+'</span><span>'+t.lbl+'</span></button>').join('');
   setTab(mod.tabs[0].id);
 }
 function setTab(id){
@@ -272,7 +279,7 @@ function stars(n){return[1,2,3,4,5,6,7,8,9,10].map(i=>'<span style="font-size:15
 function rT(){
   const act=CACHE.trabajadores.filter(t=>t.estado==='activo'||t.estado==='contrato');
   pg('trabajadores','<div class="shdr"><div><div class="stit">Trabajadores</div><div class="ssub">'+act.length+' registrado'+(act.length!==1?'s':'')+'</div></div><button class="btn bg bsm" onclick="mTrab(null)">+ Nuevo</button></div>'+
-  (act.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div><div class="wtiny">'+t.cargo+'</div><div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.cuenta||'Sin cuenta')+'</div><div style="margin-top:6px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact"><button class="btn bgr bsm" onclick="mTrab(''+t.id+'')">Editar</button>'+(t.estado==='activo'?'<button class="btn bo bsm" onclick="mContr(''+t.id+'')">Contrato</button>':'')+'<button class="btn br bsm" onclick="mBorr('trabajador',''+t.id+'')">Eliminar</button></div></div></div>').join('')||'<div class="empty">Sin trabajadores registrados</div>'));
+  (act.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div><div class="wtiny">'+t.cargo+'</div><div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.cuenta||'Sin cuenta')+'</div><div style="margin-top:6px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact"><button class="btn bgr bsm" onclick="mTrab(\''+t.id+'\')">Editar</button>'+(t.estado==='activo'?'<button class="btn bo bsm" onclick="mContr(\''+t.id+'\')">Contrato</button>':'')+'<button class="btn br bsm" onclick="mBorr(\'trabajador\',\''+t.id+'\')">Eliminar</button></div></div></div>').join('')||'<div class="empty">Sin trabajadores registrados</div>'));
 }
 function selOpts(arr,val){return arr.map(a=>'<option'+(a===val?' selected':'')+'>'+a+'</option>').join('')}
 function mTrab(id){
@@ -287,7 +294,7 @@ function mTrab(id){
     '<div class="sep"></div><p style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Datos bancarios</p>'+
     '<div class="field" style="margin-bottom:10px"><label>Banco</label><select id="tbco">'+selOpts(BANCOS,t.banco)+'</select></div>'+
     '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Tipo</label><select id="ttipo"><option'+(t.tipoCuenta==='Ahorros'?' selected':'')+'>Ahorros</option><option'+(t.tipoCuenta==='Corriente'?' selected':'')+'>Corriente</option></select></div><div class="field"><label># Cuenta</label><input id="tcta" value="'+(t.cuenta||'')+'"></div></div>'+
-    '<div class="brow" style="justify-content:flex-end;margin-top:4px"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" id="btnGT" onclick="guardT(''+( id||'')+'')">Guardar</button></div>');
+    '<div class="brow" style="justify-content:flex-end;margin-top:4px"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" id="btnGT" onclick="guardT(\''+( id||'')+'\')">Guardar</button></div>');
 }
 window.mTrab=mTrab;
 async function guardT(id){
@@ -304,14 +311,14 @@ async function guardT(id){
 window.guardT=guardT;
 function mContr(id){
   const t=CACHE.trabajadores.find(x=>x.id===id);
-  openModal('Pasar a contrato fijo','<div class="alerto" style="margin-bottom:12px"><strong>'+t.nombres+'</strong> dejara de aparecer como eventual. Su historial se conserva.</div><div class="field" style="margin-bottom:14px"><label>Fecha inicio contrato *</label><input type="date" id="cf" value="'+hoy()+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bb" onclick="confContr(''+id+'')">Confirmar</button></div>');
+  openModal('Pasar a contrato fijo','<div class="alerto" style="margin-bottom:12px"><strong>'+t.nombres+'</strong> dejara de aparecer como eventual. Su historial se conserva.</div><div class="field" style="margin-bottom:14px"><label>Fecha inicio contrato *</label><input type="date" id="cf" value="'+hoy()+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bb" onclick="confContr(\''+id+'\')">Confirmar</button></div>');
 }
 window.mContr=mContr;
 async function confContr(id){const f=document.getElementById('cf').value;if(!f){toast('Ingresa la fecha','err');return}await fupd('trabajadores',id,{estado:'contrato',fechaContrato:f});closeModal();toast('Marcado como contrato fijo');}
 window.confContr=confContr;
 function mBorr(tipo,id){
   const msgs={trabajador:'Eliminar este trabajador y todas sus asistencias?',asistencia:'Eliminar este registro de asistencia?',negra:'Eliminar de lista negra?',periodo:'Eliminar este periodo?'};
-  openModal('Confirmar eliminacion','<p style="font-size:14px;margin-bottom:18px">'+msgs[tipo]+' Esta accion no se puede deshacer.</p><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="execBorr(''+tipo+'',''+id+'')">Eliminar</button></div>');
+  openModal('Confirmar eliminacion','<p style="font-size:14px;margin-bottom:18px">'+msgs[tipo]+' Esta accion no se puede deshacer.</p><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="execBorr(\''+tipo+'\',\''+id+'\')">Eliminar</button></div>');
 }
 window.mBorr=mBorr;
 async function execBorr(tipo,id){
@@ -328,13 +335,13 @@ window.execBorr=execBorr;
 function rE(){
   pg('estados','<div class="shdr"><div class="stit">Estado de trabajadores</div></div>'+
   CACHE.trabajadores.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+'</div><div style="margin-top:5px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact">'+
-  (t.estado==='activo'?'<button class="btn br bsm" onclick="mBaja(''+t.id+'')">Dar de baja</button>':'')+
-  (t.estado==='baja'?'<button class="btn bg bsm" onclick="reactiv(''+t.id+'')">Reactivar</button><button class="btn br bsm" onclick="mNegra(''+t.id+'')">Lista negra</button>':'')+
+  (t.estado==='activo'?'<button class="btn br bsm" onclick="mBaja(\''+t.id+'\')">Dar de baja</button>':'')+
+  (t.estado==='baja'?'<button class="btn bg bsm" onclick="reactiv(\''+t.id+'\')">Reactivar</button><button class="btn br bsm" onclick="mNegra(\''+t.id+'\')">Lista negra</button>':'')+
   '</div></div></div>').join(''));
 }
 function mBaja(id){
   const t=CACHE.trabajadores.find(x=>x.id===id);
-  openModal('Dar de baja a '+t.nombres,'<div class="field" style="margin-bottom:10px"><label>Fecha de baja</label><input type="date" id="fb" value="'+hoy()+'"></div><div class="field" style="margin-bottom:14px"><label>Motivo</label><textarea id="fmot" placeholder="Motivo de la baja..."></textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="confBaja(''+id+'')">Confirmar baja</button></div>');
+  openModal('Dar de baja a '+t.nombres,'<div class="field" style="margin-bottom:10px"><label>Fecha de baja</label><input type="date" id="fb" value="'+hoy()+'"></div><div class="field" style="margin-bottom:14px"><label>Motivo</label><textarea id="fmot" placeholder="Motivo de la baja..."></textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="confBaja(\''+id+'\')">Confirmar baja</button></div>');
 }
 window.mBaja=mBaja;
 async function confBaja(id){await fupd('trabajadores',id,{estado:'baja',fechaBaja:document.getElementById('fb').value,motivoBaja:document.getElementById('fmot').value});closeModal();toast('Trabajador dado de baja');}
@@ -346,7 +353,7 @@ function selCal(n){calV=n;document.querySelectorAll('.cal-btn').forEach((b,i)=>b
 window.selCal=selCal;
 function mNegra(id){
   const t=CACHE.trabajadores.find(x=>x.id===id);calV=0;
-  openModal('Archivar en lista negra','<p style="font-size:13px;margin-bottom:12px"><strong>'+t.nombres+'</strong> sera archivado y no aparecera en marcaciones.</p><div class="field" style="margin-bottom:10px"><label>Calificacion 1-10 (1=muy malo, 10=excelente)</label><div class="cal-wrap">'+[1,2,3,4,5,6,7,8,9,10].map(n=>'<button class="cal-btn" onclick="selCal('+n+')">'+n+'</button>').join('')+'</div></div><div class="field" style="margin-bottom:14px"><label>Comentario para proximo llamado</label><textarea id="ncal" placeholder="Podria volver a llamarse?"></textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="confNegra(''+id+'')">Archivar</button></div>');
+  openModal('Archivar en lista negra','<p style="font-size:13px;margin-bottom:12px"><strong>'+t.nombres+'</strong> sera archivado y no aparecera en marcaciones.</p><div class="field" style="margin-bottom:10px"><label>Calificacion 1-10 (1=muy malo, 10=excelente)</label><div class="cal-wrap">'+[1,2,3,4,5,6,7,8,9,10].map(n=>'<button class="cal-btn" onclick="selCal('+n+')">'+n+'</button>').join('')+'</div></div><div class="field" style="margin-bottom:14px"><label>Comentario para proximo llamado</label><textarea id="ncal" placeholder="Podria volver a llamarse?"></textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="confNegra(\''+id+'\')">Archivar</button></div>');
 }
 window.mNegra=mNegra;
 async function confNegra(id){
@@ -360,11 +367,11 @@ window.confNegra=confNegra;
 // LISTA NEGRA
 function rLN(){
   pg('lnegra','<div class="shdr"><div><div class="stit">Lista negra</div><div class="ssub">Archivados - no aparecen en marcaciones</div></div></div>'+
-  (CACHE.listaNegra.map(n=>'<div class="ncard"><div class="wname">'+n.nombres+'</div><div class="wsub">'+n.area+' - C.I. '+n.cedula+'</div><div style="margin:6px 0">'+stars(n.calificacion)+' <span style="font-size:12px;color:var(--t2)">'+n.calificacion+'/10</span></div>'+(n.comentario?'<div style="font-size:12px;color:var(--t2);background:#fafafa;padding:8px;border-radius:6px;margin-top:4px">'+n.comentario+'</div>':'')+'<div style="font-size:11px;color:var(--t3);margin-top:6px">Archivado: '+fmtF(n.fecha)+'</div><div class="wact"><button class="btn bgr bsm" onclick="mEdN(''+n.id+'')">Editar nota</button><button class="btn br bsm" onclick="mBorr('negra',''+n.id+'')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin registros en lista negra</div>'));
+  (CACHE.listaNegra.map(n=>'<div class="ncard"><div class="wname">'+n.nombres+'</div><div class="wsub">'+n.area+' - C.I. '+n.cedula+'</div><div style="margin:6px 0">'+stars(n.calificacion)+' <span style="font-size:12px;color:var(--t2)">'+n.calificacion+'/10</span></div>'+(n.comentario?'<div style="font-size:12px;color:var(--t2);background:#fafafa;padding:8px;border-radius:6px;margin-top:4px">'+n.comentario+'</div>':'')+'<div style="font-size:11px;color:var(--t3);margin-top:6px">Archivado: '+fmtF(n.fecha)+'</div><div class="wact"><button class="btn bgr bsm" onclick="mEdN(\''+n.id+'\')">Editar nota</button><button class="btn br bsm" onclick="mBorr(\'negra\',\''+n.id+'\')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin registros en lista negra</div>'));
 }
 function mEdN(id){
   const n=CACHE.listaNegra.find(x=>x.id===id);calV=n.calificacion;
-  openModal('Editar calificacion','<p style="font-weight:700;margin-bottom:10px">'+n.nombres+'</p><div class="field" style="margin-bottom:10px"><label>Calificacion</label><div class="cal-wrap">'+[1,2,3,4,5,6,7,8,9,10].map(i=>'<button class="cal-btn'+(i<=n.calificacion?' sel':'')+'" onclick="selCal('+i+')">'+i+'</button>').join('')+'</div></div><div class="field" style="margin-bottom:14px"><label>Comentario</label><textarea id="ncal">'+(n.comentario||'')+'</textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gEdN(''+id+'')">Guardar</button></div>');
+  openModal('Editar calificacion','<p style="font-weight:700;margin-bottom:10px">'+n.nombres+'</p><div class="field" style="margin-bottom:10px"><label>Calificacion</label><div class="cal-wrap">'+[1,2,3,4,5,6,7,8,9,10].map(i=>'<button class="cal-btn'+(i<=n.calificacion?' sel':'')+'" onclick="selCal('+i+')">'+i+'</button>').join('')+'</div></div><div class="field" style="margin-bottom:14px"><label>Comentario</label><textarea id="ncal">'+(n.comentario||'')+'</textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gEdN(\''+id+'\')">Guardar</button></div>');
 }
 window.mEdN=mEdN;
 async function gEdN(id){await fupd('listaNegra',id,{calificacion:calV,comentario:document.getElementById('ncal').value});closeModal();toast('Nota actualizada correctamente');}
@@ -382,10 +389,10 @@ function rM(){
   act.map(t=>{
     const m=mMap[t.id]||{presente:false,entrada:'08:00',salida:'18:00',feriado:eFin,obs:''};
     const c=m.presente?calcP(mFecha,m.entrada,m.salida,m.feriado):{};
-    return'<div class="mcard'+(m.presente?' pre':'')+'" id="mc-'+t.id+'"><div class="mtop"><div class="mchk'+(m.presente?' on':'')+'" id="mchk-'+t.id+'" onclick="togP(''+t.id+'','+eFin+')">'+(m.presente?'v':'')+
+    return'<div class="mcard'+(m.presente?' pre':'')+'" id="mc-'+t.id+'"><div class="mtop"><div class="mchk'+(m.presente?' on':'')+'" id="mchk-'+t.id+'" onclick="togP(\''+t.id+'\','+eFin+')">'+(m.presente?'v':'')+
     '</div><div style="flex:1"><div class="mname">'+t.nombres+'</div><div class="marea">'+t.area+'</div></div>'+
     (m.presente&&c.pago!=null?'<div style="text-align:right"><div class="mpago">$'+c.pago.toFixed(2)+'</div>'+(c.atrasoH>0?'<div class="matr">-'+c.atrasoH+'h (-$'+c.descVal.toFixed(2)+')</div>':'')+'</div>':'<div id="mcalc-'+t.id+'"></div>')+
-    '</div><div class="mdet'+(m.presente?' show':'')+'" id="mdet-'+t.id+'"><div class="mtimes"><div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" onchange="updC(''+t.id+'','+eFin+')"></div><div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" onchange="updC(''+t.id+'','+eFin+')"></div><div class="field"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="mfer-'+t.id+'" '+(m.feriado?'checked':'')+' onchange="updC(''+t.id+'','+eFin+')"> Feriado</label></div></div><div class="field"><label>Observacion</label><input id="mobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div></div></div>';
+    '</div><div class="mdet'+(m.presente?' show':'')+'" id="mdet-'+t.id+'"><div class="mtimes"><div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" onchange="updC(\''+t.id+'\','+eFin+')"></div><div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" onchange="updC(\''+t.id+'\','+eFin+')"></div><div class="field"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="mfer-'+t.id+'" '+(m.feriado?'checked':'')+' onchange="updC(\''+t.id+'\','+eFin+')"> Feriado</label></div></div><div class="field"><label>Observacion</label><input id="mobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div></div></div>';
   }).join('')||'<div class="empty">No hay eventuales activos</div>'+
   '<button class="btn bg bfull" style="margin-top:12px" onclick="guardDia()">Guardar marcacion del dia</button>');
 }
@@ -431,11 +438,11 @@ function rHist(){
   const as=[...CACHE.asistencias].sort((a,b)=>b.fecha.localeCompare(a.fecha));
   pg('historial','<div class="shdr"><div class="stit">Historial de asistencias</div></div>'+
   (as.length?'<div class="iwrap"><table><thead><tr><th>Fecha</th><th>Trabajador</th><th>Entrada</th><th>Atraso</th><th>Pago</th><th></th></tr></thead><tbody>'+
-  as.map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<tr><td style="white-space:nowrap">'+fmtF(a.fecha)+'</td><td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.area+'</span></td><td>'+a.entrada+'</td><td class="'+(c.atrasoH>0?'dc':'trr')+'">'+( c.atrasoH>0?c.atrasoH+'h':'--')+'</td><td class="tr"><strong>$'+c.pago.toFixed(2)+'</strong></td><td><div style="display:flex;gap:4px"><button class="btn bgr bsm" onclick="mEdA(''+a.id+'')">Ed</button><button class="btn br bsm" onclick="mBorr('asistencia',''+a.id+'')">X</button></div></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Sin registros de asistencia</div>'));
+  as.map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<tr><td style="white-space:nowrap">'+fmtF(a.fecha)+'</td><td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.area+'</span></td><td>'+a.entrada+'</td><td class="'+(c.atrasoH>0?'dc':'trr')+'">'+( c.atrasoH>0?c.atrasoH+'h':'--')+'</td><td class="tr"><strong>$'+c.pago.toFixed(2)+'</strong></td><td><div style="display:flex;gap:4px"><button class="btn bgr bsm" onclick="mEdA(\''+a.id+'\')">Ed</button><button class="btn br bsm" onclick="mBorr(\'asistencia\',\''+a.id+'\')">X</button></div></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Sin registros de asistencia</div>'));
 }
 function mEdA(id){
   const a=CACHE.asistencias.find(x=>x.id===id);const t=CACHE.trabajadores.find(x=>x.id===a.tId);
-  openModal('Editar - '+(t?.nombres||''),'<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Fecha</label><input type="date" id="ef" value="'+a.fecha+'"></div><div class="field"><label>Entrada</label><input type="time" id="ee" value="'+a.entrada+'"></div></div><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Salida</label><input type="time" id="es" value="'+a.salida+'"></div><div class="field"><label>Feriado</label><select id="efer"><option value="0"'+(!a.feriado?' selected':'')+'>No</option><option value="1"'+(a.feriado?' selected':'')+'>Si</option></select></div></div><div class="field" style="margin-bottom:14px"><label>Observacion</label><input id="eobs" value="'+(a.obs||'')+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gEdA(''+id+'')">Guardar</button></div>');
+  openModal('Editar - '+(t?.nombres||''),'<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Fecha</label><input type="date" id="ef" value="'+a.fecha+'"></div><div class="field"><label>Entrada</label><input type="time" id="ee" value="'+a.entrada+'"></div></div><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Salida</label><input type="time" id="es" value="'+a.salida+'"></div><div class="field"><label>Feriado</label><select id="efer"><option value="0"'+(!a.feriado?' selected':'')+'>No</option><option value="1"'+(a.feriado?' selected':'')+'>Si</option></select></div></div><div class="field" style="margin-bottom:14px"><label>Observacion</label><input id="eobs" value="'+(a.obs||'')+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gEdA(\''+id+'\')">Guardar</button></div>');
 }
 window.mEdA=mEdA;
 async function gEdA(id){await fupd('asistencias',id,{fecha:document.getElementById('ef').value,entrada:document.getElementById('ee').value,salida:document.getElementById('es').value,feriado:document.getElementById('efer').value==='1',obs:document.getElementById('eobs').value});closeModal();toast('Asistencia actualizada correctamente');}
@@ -456,11 +463,11 @@ function rSV(){
 }
 function rSVP(){
   pg('sv_periodos','<div class="shdr"><div class="stit">Periodos autorizados</div><button class="btn bg bsm" onclick="mPer(null)">+ Nuevo</button></div>'+
-  (CACHE.periodos.map(p=>'<div class="pchip"><div class="pdates">'+fmtF(p.desde)+' a '+fmtF(p.hasta)+'</div><div class="parea"><span class="chip">'+(p.area||'Todas las areas')+'</span>'+(p.obs?' - '+p.obs:'')+'</div><div style="margin-top:8px" class="brow"><button class="btn bgr bsm" onclick="mPer(''+p.id+'')">Editar</button><button class="btn br bsm" onclick="mBorr('periodo',''+p.id+'')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin periodos</div>'));
+  (CACHE.periodos.map(p=>'<div class="pchip"><div class="pdates">'+fmtF(p.desde)+' a '+fmtF(p.hasta)+'</div><div class="parea"><span class="chip">'+(p.area||'Todas las areas')+'</span>'+(p.obs?' - '+p.obs:'')+'</div><div style="margin-top:8px" class="brow"><button class="btn bgr bsm" onclick="mPer(\''+p.id+'\')">Editar</button><button class="btn br bsm" onclick="mBorr(\'periodo\',\''+p.id+'\')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin periodos</div>'));
 }
 function mPer(id){
   const p=id?CACHE.periodos.find(x=>x.id===id):{area:'',desde:hoy(),hasta:hoy(),obs:''};
-  openModal(id?'Editar periodo':'Nuevo periodo autorizado','<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde *</label><input type="date" id="pd" value="'+p.desde+'"></div><div class="field"><label>Hasta *</label><input type="date" id="ph" value="'+p.hasta+'"></div></div><div class="field" style="margin-bottom:10px"><label>Area</label><select id="pa"><option value="">Todas</option>'+selOpts(AREAS,p.area)+'</select></div><div class="field" style="margin-bottom:14px"><label>Observacion</label><input id="po" value="'+(p.obs||'')+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gPer(''+( id||'')+'')">Guardar</button></div>');
+  openModal(id?'Editar periodo':'Nuevo periodo autorizado','<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde *</label><input type="date" id="pd" value="'+p.desde+'"></div><div class="field"><label>Hasta *</label><input type="date" id="ph" value="'+p.hasta+'"></div></div><div class="field" style="margin-bottom:10px"><label>Area</label><select id="pa"><option value="">Todas</option>'+selOpts(AREAS,p.area)+'</select></div><div class="field" style="margin-bottom:14px"><label>Observacion</label><input id="po" value="'+(p.obs||'')+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gPer(\''+( id||'')+'\')">Guardar</button></div>');
 }
 window.mPer=mPer;
 async function gPer(id){
@@ -486,7 +493,7 @@ window.genInf=function(){
   if(!fi.length){document.getElementById('inf-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
   const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
   const per=d1.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'})+' al '+d2.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('inf-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nomina mensual</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="8" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button class="btn bb" onclick="impr('nomina',''+desde+'',''+hasta+'',''+area+'')">Imprimir nomina</button>';
+  document.getElementById('inf-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nomina mensual</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="8" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button class="btn bb" onclick="impr(\'nomina\',\''+desde+'\',\''+hasta+'\',\''+area+'\')">Imprimir nomina</button>';
 };
 function rTrans(){
   const n=new Date();if(!iD)iD=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);if(!iH)iH=hoy();
@@ -503,15 +510,15 @@ window.genTrans=function(){
   '<div class="iwrap"><table><thead><tr><th>Nombres</th><th>Cedula</th><th>Banco</th><th>Tipo</th><th># Cuenta</th><th>Dias</th><th>Total</th></tr></thead><tbody>'+
   conC.map(({t,r})=>'<tr><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+( t.banco||'--')+'</td><td style="font-size:11px">'+(t.tipoCuenta||'--')+'</td><td style="font-family:monospace;font-size:11px">'+t.cuenta+'</td><td class="tc">'+r.dias+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>').join('')+
   '<tr class="tot"><td colspan="6" style="text-align:right;padding-right:12px">TOTAL</td><td class="tr">$'+tot.toFixed(2)+'</td></tr></tbody></table></div>'+
-  '<button class="btn bb" style="margin-top:10px" onclick="impr('transferencias',''+desde+'',''+hasta+'','')">Imprimir detalle</button>';
+  '<button class="btn bb" style="margin-top:10px" onclick="impr(\'transferencias\',\''+desde+'\',\''+hasta+'\',\'\')">Imprimir detalle</button>';
 };
 function rPers(){
   pg('personal','<div class="shdr"><div class="stit">Personal</div><button class="btn bg bsm" onclick="mTrab(null)">+ Nuevo</button></div>'+
-  CACHE.trabajadores.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div><div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.tipoCuenta||'')+' - '+(t.cuenta||'Sin cuenta')+'</div><div style="margin-top:5px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact"><button class="btn bgr bsm" onclick="mTrab(''+t.id+'')">Editar</button><button class="btn br bsm" onclick="mBorr('trabajador',''+t.id+'')">Eliminar</button></div></div></div>').join(''));
+  CACHE.trabajadores.map(t=>'<div class="wcard"><div class="av '+avCls(t.estado)+'">'+inic(t.nombres)+'</div><div class="winfo"><div class="wname">'+t.nombres+'</div><div class="wsub">'+t.area+' - C.I. '+t.cedula+'</div><div class="wtiny">'+(t.banco||'Sin banco')+' - '+(t.tipoCuenta||'')+' - '+(t.cuenta||'Sin cuenta')+'</div><div style="margin-top:5px"><span class="bdg '+bdgCls(t.estado)+'">'+estLbl(t.estado)+'</span></div><div class="wact"><button class="btn bgr bsm" onclick="mTrab(\''+t.id+'\')">Editar</button><button class="btn br bsm" onclick="mBorr(\'trabajador\',\''+t.id+'\')">Eliminar</button></div></div></div>').join(''));
 }
 function rJLN(){
   pg('jlnegra','<div class="shdr"><div><div class="stit">Lista negra</div><div class="ssub">Referencia para futuros llamados</div></div></div>'+
-  (CACHE.listaNegra.map(n=>'<div class="ncard"><div class="wname">'+n.nombres+'</div><div class="wsub">'+n.area+' - C.I. '+n.cedula+'</div><div style="margin:6px 0">'+stars(n.calificacion)+' <span style="font-size:12px;color:var(--t2)">'+n.calificacion+'/10</span></div>'+(n.comentario?'<div style="font-size:12px;color:var(--t2);background:#fafafa;padding:8px;border-radius:6px;margin-top:4px">'+n.comentario+'</div>':'')+'<div style="font-size:11px;color:var(--t3);margin-top:6px">Archivado: '+fmtF(n.fecha)+'</div><div class="wact"><button class="btn bgr bsm" onclick="mEdN(''+n.id+'')">Editar nota</button><button class="btn br bsm" onclick="mBorr('negra',''+n.id+'')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin registros</div>'));
+  (CACHE.listaNegra.map(n=>'<div class="ncard"><div class="wname">'+n.nombres+'</div><div class="wsub">'+n.area+' - C.I. '+n.cedula+'</div><div style="margin:6px 0">'+stars(n.calificacion)+' <span style="font-size:12px;color:var(--t2)">'+n.calificacion+'/10</span></div>'+(n.comentario?'<div style="font-size:12px;color:var(--t2);background:#fafafa;padding:8px;border-radius:6px;margin-top:4px">'+n.comentario+'</div>':'')+'<div style="font-size:11px;color:var(--t3);margin-top:6px">Archivado: '+fmtF(n.fecha)+'</div><div class="wact"><button class="btn bgr bsm" onclick="mEdN(\''+n.id+'\')">Editar nota</button><button class="btn br bsm" onclick="mBorr(\'negra\',\''+n.id+'\')">Eliminar</button></div></div>').join('')||'<div class="empty">Sin registros</div>'));
 }
 window.impr=function(tipo,desde,hasta,area){
   const el=document.getElementById(tipo==='nomina'?'inf-res':'trans-res');
@@ -522,7 +529,14 @@ window.impr=function(tipo,desde,hasta,area){
 };
 // INICIO
 startLS();
-setTimeout(()=>{document.getElementById('loader').style.display='none';document.getElementById('login').style.display='flex';},6000);
+// Seguridad: Si en 4 segundos no ha cargado Firebase, forzar login
+setTimeout(()=>{
+  const loader = document.getElementById('loader');
+  if(loader && loader.style.display !== 'none'){
+    loader.style.display='none';
+    document.getElementById('login').style.display='flex';
+  }
+},4000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
