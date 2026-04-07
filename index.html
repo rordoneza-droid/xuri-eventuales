@@ -455,11 +455,11 @@ window.togActivo=async function(id,nuevoEstado){
 window.confInact=async function(){
   var id=window._inactivarId;
   if(!id)return;
-  await fupd('trabajadores',id,{estado:'baja',
-    fechaBaja:document.getElementById('fb2').value,
-    motivoBaja:document.getElementById('fmot2').value});
+  var fechaBaja=document.getElementById('fb2').value;
+  var motivoBaja=document.getElementById('fmot2').value;
   window._inactivarId=null;
-  closeModal();
+  closeModal(); // Cerrar antes del update para que _scheduleRender funcione
+  await fupd('trabajadores',id,{estado:'baja',fechaBaja:fechaBaja,motivoBaja:motivoBaja});
   toast('Trabajador inactivado - ya no aparece en marcacion de Bodega');
 }
 function selOpts(arr,val){return arr.map(a=>'<option'+(a===val?' selected':'')+'>'+a+'</option>').join('')}
@@ -504,7 +504,13 @@ function mContr(id){
   openModal('Pasar a contrato fijo','<div class="alerto" style="margin-bottom:12px"><strong>'+t.nombres+'</strong> dejara de aparecer como eventual. Su historial se conserva.</div><div class="field" style="margin-bottom:14px"><label>Fecha inicio contrato *</label><input type="date" id="cf" value="'+hoy()+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bb" onclick="confContr(\''+id+'\')">Confirmar</button></div>');
 }
 window.mContr=mContr;
-async function confContr(id){const f=document.getElementById('cf').value;if(!f){toast('Ingresa la fecha','err');return}await fupd('trabajadores',id,{estado:'contrato',fechaContrato:f});closeModal();toast('Marcado como contrato fijo');}
+async function confContr(id){
+  const f=document.getElementById('cf').value;
+  if(!f){toast('Ingresa la fecha','err');return}
+  closeModal(); // Cerrar antes del update
+  await fupd('trabajadores',id,{estado:'contrato',fechaContrato:f});
+  toast('Marcado como contrato fijo');
+}
 window.confContr=confContr;
 function mBorr(tipo,id){
   const msgs={trabajador:'Eliminar este trabajador y todas sus asistencias?',asistencia:'Eliminar este registro de asistencia?',negra:'Eliminar de lista negra?',periodo:'Eliminar este periodo?'};
@@ -512,12 +518,27 @@ function mBorr(tipo,id){
 }
 window.mBorr=mBorr;
 async function execBorr(tipo,id){
+  closeModal(); // Cerrar ANTES de borrar para que _scheduleRender no lo bloquee
   try{
-    if(tipo==='trabajador'){await fdel('trabajadores',id);await Promise.all(CACHE.asistencias.filter(a=>a.tId===id).map(a=>fdel('asistencias',a.id)));toast('Trabajador eliminado correctamente');}
-    else if(tipo==='asistencia'){await fdel('asistencias',id);toast('Registro eliminado correctamente');}
-    else if(tipo==='negra'){await fdel('listaNegra',id);toast('Eliminado de lista negra');}
-    else if(tipo==='periodo'){await fdel('periodos',id);toast('Periodo eliminado');}
-    closeModal();
+    if(tipo==='trabajador'){
+      await fdel('trabajadores',id);
+      await Promise.all(CACHE.asistencias.filter(a=>a.tId===id).map(a=>fdel('asistencias',a.id)));
+      toast('Trabajador eliminado correctamente');
+    } else if(tipo==='asistencia'){
+      await fdel('asistencias',id);
+      toast('Registro eliminado correctamente');
+    } else if(tipo==='negra'){
+      await fdel('listaNegra',id);
+      toast('Eliminado de lista negra');
+    } else if(tipo==='periodo'){
+      await fdel('periodos',id);
+      toast('Periodo eliminado');
+    }
+    // Forzar re-render explícito por si el debounce ya pasó
+    if(ROL&&tabActual){
+      var renders={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,faltas:rFaltas,historial:rHist,bajas:rBajas,marc_admin:rMarcAdmin,faltas_admin:rFaltasAdmin,hist_admin:rHistAdmin,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,transferencias:rTrans,personal:rPers,admin_evt:rAdminEvt,jlnegra:rJLN};
+      if(renders[tabActual])renders[tabActual]();
+    }
   }catch(e){toast('Error: '+e.message,'err');}
 }
 window.execBorr=execBorr;
@@ -534,7 +555,13 @@ function mBaja(id){
   openModal('Dar de baja a '+t.nombres,'<div class="field" style="margin-bottom:10px"><label>Fecha de baja</label><input type="date" id="fb" value="'+hoy()+'"></div><div class="field" style="margin-bottom:14px"><label>Motivo</label><textarea id="fmot" placeholder="Motivo de la baja..."></textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn br" onclick="confBaja(\''+id+'\')">Confirmar baja</button></div>');
 }
 window.mBaja=mBaja;
-async function confBaja(id){await fupd('trabajadores',id,{estado:'baja',fechaBaja:document.getElementById('fb').value,motivoBaja:document.getElementById('fmot').value});closeModal();toast('Trabajador dado de baja');}
+async function confBaja(id){
+  var fb=document.getElementById('fb').value;
+  var fmot=document.getElementById('fmot').value;
+  closeModal(); // Cerrar antes del update
+  await fupd('trabajadores',id,{estado:'baja',fechaBaja:fb,motivoBaja:fmot});
+  toast('Trabajador dado de baja');
+}
 window.confBaja=confBaja;
 async function reactiv(id){await fupd('trabajadores',id,{estado:'activo',fechaBaja:'',motivoBaja:''});toast('Trabajador reactivado');}
 window.reactiv=reactiv;
@@ -549,9 +576,12 @@ window.mNegra=mNegra;
 async function confNegra(id){
   if(!calV){toast('Selecciona una calificacion','err');return}
   const t=CACHE.trabajadores.find(x=>x.id===id);
-  await fadd('listaNegra',{tId:id,nombres:t.nombres,cedula:t.cedula,area:t.area,cargo:t.cargo,calificacion:calV,comentario:document.getElementById('ncal').value,fecha:hoy()});
+  const comentario=document.getElementById('ncal').value;
+  const calGuard=calV;
+  closeModal();calV=0; // Cerrar antes de las operaciones async
+  await fadd('listaNegra',{tId:id,nombres:t.nombres,cedula:t.cedula,area:t.area,cargo:t.cargo,calificacion:calGuard,comentario:comentario,fecha:hoy()});
   await fupd('trabajadores',id,{estado:'archivado'});
-  closeModal();calV=0;toast('Archivado en lista negra');
+  toast('Archivado en lista negra');
 }
 window.confNegra=confNegra;
 // LISTA NEGRA
@@ -564,7 +594,12 @@ function mEdN(id){
   openModal('Editar calificacion','<p style="font-weight:700;margin-bottom:10px">'+n.nombres+'</p><div class="field" style="margin-bottom:10px"><label>Calificacion</label><div class="cal-wrap">'+[1,2,3,4,5,6,7,8,9,10].map(i=>'<button class="cal-btn'+(i<=n.calificacion?' sel':'')+'" onclick="selCal('+i+')">'+i+'</button>').join('')+'</div></div><div class="field" style="margin-bottom:14px"><label>Comentario</label><textarea id="ncal">'+(n.comentario||'')+'</textarea></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gEdN(\''+id+'\')">Guardar</button></div>');
 }
 window.mEdN=mEdN;
-async function gEdN(id){await fupd('listaNegra',id,{calificacion:calV,comentario:document.getElementById('ncal').value});closeModal();toast('Nota actualizada correctamente');}
+async function gEdN(id){
+  var cal=calV,com=document.getElementById('ncal').value;
+  closeModal();
+  await fupd('listaNegra',id,{calificacion:cal,comentario:com});
+  toast('Nota actualizada correctamente');
+}
 window.gEdN=gEdN;
 // MARCACION
 // mMap: estado local del dia. mFechaLoaded: evita pisar cambios del usuario en re-renders.
@@ -724,7 +759,12 @@ function mEdA(id){
   openModal('Editar - '+(t?.nombres||''),'<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Fecha</label><input type="date" id="ef" value="'+a.fecha+'"></div><div class="field"><label>Entrada</label><input type="time" id="ee" value="'+a.entrada+'"></div></div><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Salida</label><input type="time" id="es" value="'+a.salida+'"></div><div class="field"><label>Feriado</label><select id="efer"><option value="0"'+(!a.feriado?' selected':'')+'>No</option><option value="1"'+(a.feriado?' selected':'')+'>Si</option></select></div></div><div class="field" style="margin-bottom:14px"><label>Observacion</label><input id="eobs" value="'+(a.obs||'')+'"></div><div class="brow" style="justify-content:flex-end"><button class="btn bgr" onclick="closeModal()">Cancelar</button><button class="btn bg" onclick="gEdA(\''+id+'\')">Guardar</button></div>');
 }
 window.mEdA=mEdA;
-async function gEdA(id){await fupd('asistencias',id,{fecha:document.getElementById('ef').value,entrada:document.getElementById('ee').value,salida:document.getElementById('es').value,feriado:document.getElementById('efer').value==='1',obs:document.getElementById('eobs').value});closeModal();toast('Asistencia actualizada correctamente');}
+async function gEdA(id){
+  var d={fecha:document.getElementById('ef').value,entrada:document.getElementById('ee').value,salida:document.getElementById('es').value,feriado:document.getElementById('efer').value==='1',obs:document.getElementById('eobs').value};
+  closeModal();
+  await fupd('asistencias',id,d);
+  toast('Asistencia actualizada correctamente');
+}
 window.gEdA=gEdA;
 function rBajas(){
   const b=CACHE.trabajadores.filter(t=>t.estado==='baja'||t.estado==='archivado');
@@ -862,8 +902,8 @@ window.mPer=mPer;
 async function gPer(id){
   const d={area:document.getElementById('pa').value,desde:document.getElementById('pd').value,hasta:document.getElementById('ph').value,obs:document.getElementById('po').value};
   if(!d.desde||!d.hasta){toast('Fechas obligatorias','err');return}
-  if(id){await fupd('periodos',id,d);toast('Periodo actualizado');}else{await fadd('periodos',d);toast('Periodo registrado correctamente');}
   closeModal();
+  if(id){await fupd('periodos',id,d);toast('Periodo actualizado');}else{await fadd('periodos',d);toast('Periodo registrado correctamente');}
 }
 window.gPer=gPer;
 // JEFE RRHH
