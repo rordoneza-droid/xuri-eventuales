@@ -245,23 +245,41 @@ async function fadd(col,data){return await addDoc(COL[col](),{...data,_ts:server
 async function fupd(col,id,data){return await updateDoc(doc(db,col,id),data)}
 async function fdel(col,id){return await deleteDoc(doc(db,col,id))}
 let uns=[];
+let _appInitialized=false;
+let _renderTimer=null;
+function _scheduleRender(){
+  clearTimeout(_renderTimer);
+  _renderTimer=setTimeout(function(){
+    if(!ROL||!tabActual)return;
+    var modalOpen=document.getElementById('modal')&&document.getElementById('modal').classList.contains('show');
+    if(modalOpen)return;
+    var renders={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,historial:rHist,bajas:rBajas,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,transferencias:rTrans,personal:rPers,jlnegra:rJLN};
+    if(renders[tabActual])renders[tabActual]();
+  },80);
+}
 function startLS(){
-  uns.forEach(u=>u());uns=[];
-  const cols = ['trabajadores','asistencias','listaNegra','periodos'];
-  cols.forEach(col=>{
-    const u=onSnapshot(query(COL[col](),orderBy('_ts','asc')),snap=>{
-      CACHE[col]=snap.docs.map(d=>({...d.data(),id:d.id}));
+  uns.forEach(function(u){u();});uns=[];
+  _appInitialized=false;
+  var cols=['trabajadores','asistencias','listaNegra','periodos'];
+  cols.forEach(function(col){
+    var u=onSnapshot(query(COL[col](),orderBy('_ts','asc')),function(snap){
+      CACHE[col]=snap.docs.map(function(d){return Object.assign({},d.data(),{id:d.id});});
       CACHE._loaded[col]=true;
-      if(document.getElementById('sdot')) document.getElementById('sdot').style.background='#4ade80';
-      const allLoaded = cols.filter(c => CACHE._loaded[c]).length === 4;
-      if(allLoaded){
-        document.getElementById('loader').style.display='none';
-        document.getElementById('login').style.display='flex';
+      var sdot=document.getElementById('sdot');
+      if(sdot)sdot.style.background='#4ade80';
+      if(!_appInitialized){
+        var allLoaded=cols.every(function(c){return CACHE._loaded[c];});
+        if(allLoaded){
+          _appInitialized=true;
+          document.getElementById('loader').style.display='none';
+          document.getElementById('login').style.display='flex';
+        }
       }
-      if(ROL)setTab(tabActual);
-    },(err)=>{
+      if(ROL&&tabActual)_scheduleRender();
+    },function(err){
       console.error(err);
-      if(document.getElementById('sdot')) document.getElementById('sdot').style.background='#f87171';
+      var sdot=document.getElementById('sdot');
+      if(sdot)sdot.style.background='#f87171';
     });
     uns.push(u);
   });
