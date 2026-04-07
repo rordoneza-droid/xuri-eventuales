@@ -1501,7 +1501,7 @@ function rHistAdmin(){
           (r.semanasIntegrales>0?' + <strong style="color:var(--v)">'+r.bonoDias+' bono</strong> ('+r.semanasIntegrales+' sem. integral)':'')+
         '</div>'+
       '</div>'+
-      '<strong style="color:var(--v);font-size:15px">$'+r.pago.toFixed(2)+'</strong>'+
+      '<strong style="color:var(--v);font-size:15px">$'+(r.pago||0).toFixed(2)+'</strong>'+
     '</div>';
   }).join('');
   pg('hist_admin',
@@ -1515,7 +1515,7 @@ function rHistAdmin(){
           var esFalta=a.falta;
           var esJ=a.justificado;
           var c=(!esFalta&&!esJ)?calcPAdmin(a.fecha,a.entrada,a.salida,a.feriado,t.sueldo||500):null;
-          var pagoStr=esFalta?'<span style="color:var(--r);font-weight:700">FALTA</span>':esJ?'Justif.':'$'+c.pago.toFixed(2);
+          var pagoStr=esFalta?'<span style="color:var(--r);font-weight:700">FALTA</span>':esJ?'Justif.':'$'+(c?.pago||0).toFixed(2);
           return '<tr>'+
             '<td style="white-space:nowrap">'+fmtF(a.fecha)+'</td>'+
             '<td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.cargo+'</span></td>'+
