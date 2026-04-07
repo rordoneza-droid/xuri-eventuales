@@ -939,8 +939,26 @@ window.genInf=function(){
   iD=desde;iH=hasta;iA=area;
   const tr=CACHE.trabajadores.filter(t=>!area||t.area===area);
   let tD=0,tP=0,tDes=0,n=0;
-  const fi=tr.map(t=>{const r=resT(t.id,desde,hasta);if(!r.dias)return'';n++;tD+=r.dias;tP+=r.pago;tDes+=r.descVal;
-    return'<tr><td class="tc">'+n+'</td><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+t.cargo+'</td><td style="white-space:nowrap">'+fmtF(t.fechaIngreso)+'</td><td class="tc">240</td><td><span class="chip">'+t.area+'</span></td><td class="tr">$20.00</td><td class="tc">'+r.dias+'</td><td class="tr'+(r.descVal>0?' dc':'')+'">'+( r.atrasoH>0?r.atrasoH+'h -$'+r.descVal.toFixed(2):'--')+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>';}).filter(Boolean);
+  const fi=tr.map(t=>{
+    let r;
+    let sDiario;
+    let justificados=0;
+    if(t.area==='ADMINISTRACION'){
+      r=resTAdmin(t.id,t.sueldo||500,desde,hasta);
+      sDiary=Math.round((t.sueldo||500)/30*100)/100;
+      sDiario='$'+sDiary.toFixed(2);
+      // Contar días justificados para administrativos
+      justificados=CACHE.asistencias.filter(a=>a.tId===t.id&&a.fecha>=desde&&a.fecha<=hasta&&a.justificado).length;
+    } else {
+      r=resT(t.id,desde,hasta);
+      sDiario='$20.00';
+      // Contar días justificados para bodega
+      justificados=CACHE.asistencias.filter(a=>a.tId===t.id&&a.fecha>=desde&&a.fecha<=hasta&&a.justificado).length;
+    }
+    if(!r.dias)return'';n++;tD+=r.dias;tP+=r.pago;tDes+=r.descVal;
+    var jornada = t.area === 'ADMINISTRACION' ? 'Mensual' : '240';
+    return'<tr><td class="tc">'+n+'</td><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+t.cargo+'</td><td style="white-space:nowrap">'+fmtF(t.fechaIngreso)+'</td><td class="tc">'+jornada+'</td><td><span class="chip">'+t.area+'</span></td><td class="tr">'+sDiario+'</td><td class="tc">'+r.dias+'</td><td class="tr'+(r.descVal>0?' dc':'')+'">'+( r.atrasoH>0?r.atrasoH+'h -$'+r.descVal.toFixed(2):'--')+'</td><td class="tc">'+(justificados>0?justificados:'--')+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>';
+  }).filter(Boolean);
   if(!fi.length){document.getElementById('inf-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
   const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
   const per=d1.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'})+' al '+d2.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
