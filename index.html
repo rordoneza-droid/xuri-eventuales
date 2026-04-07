@@ -1391,6 +1391,8 @@ window.guardAdmin=async function(){
     registros.forEach(function(r){aMap[r.tId]={presente:true,entrada:r.entrada,salida:r.salida,feriado:r.feriado,obs:r.obs};});
     aFechaLoaded=aFecha;
     toast('Marcacion admin guardada: '+registros.length+' persona'+(registros.length!==1?'s':''));
+    // Forzar actualización del historial
+    if(tabActual==='hist_admin')rHistAdmin();
   }catch(e){toast('Error: '+e.message,'err');}
   finally{btns.forEach(function(b){b.disabled=false;b.innerHTML='&#x1F4BE; Guardar marcacion del dia';});}
 };
