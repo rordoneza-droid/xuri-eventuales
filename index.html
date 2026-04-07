@@ -464,7 +464,7 @@ window.confInact=async function(){
 }
 function selOpts(arr,val){return arr.map(a=>'<option'+(a===val?' selected':'')+'>'+a+'</option>').join('')}
 function mTrab(id){
-  const t=id?CACHE.trabajadores.find(x=>x.id===id):{nombres:'',cedula:'',cuenta:'',banco:'Banco Pichincha',tipoCuenta:'Ahorros',email:'',tel:'',dir:'',cargo:CARGOS[0],area:AREAS[0],fechaIngreso:hoy()};
+  const t=id?CACHE.trabajadores.find(x=>x.id===id):{nombres:'',cedula:'',cuenta:'',banco:'Banco Pichincha',tipoCuenta:'Ahorros',email:'',tel:'',dir:'',cargo:'',area:AREAS[0],fechaIngreso:hoy()};
   openModal(id?'Editar trabajador':'Nuevo eventual',
     '<div class="field" style="margin-bottom:10px"><label>Nombres completos *</label><input id="tn" value="'+(t.nombres||'')+'"></div>'+
     '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Cedula *</label><input id="tc" value="'+(t.cedula||'')+'"></div><div class="field"><label>Telefono</label><input id="ttel" value="'+(t.tel||'')+'"></div></div>'+
