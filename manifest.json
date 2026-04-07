@@ -1,24 +1,17 @@
 {
-  "name": "Planificador Financiero",
-  "short_name": "Planificador",
-  "description": "Control de flujo de caja, deudas y presupuestos base cero",
-  "start_url": "./planificador.html",
+  "name": "XURI Eventuales",
+  "short_name": "XURI",
+  "description": "Control de trabajadores eventuales XURI S.A.",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#080c10",
-  "theme_color": "#d4af37",
+  "background_color": "#f4f6f4",
+  "theme_color": "#1a5c32",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "logo.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "logo.png",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%231a5c32'/><text y='130' x='96' font-size='110' text-anchor='middle' fill='white' font-family='sans-serif'>X</text></svg>",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/svg+xml"
     }
   ]
 }
