@@ -5,201 +5,236 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#1a5c32">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="XURI">
-<link rel="manifest" href="manifest.json">
-<title>XURI S.A.</title>
+<title>XURI S.A. - Control</title>
 <style>
-:root{--v:#1a5c32;--vc:#e8f3e8;--r:#c0392b;--a:#d4860b;--az:#1a6fa3;--bg:#f4f6f4;--bd:#dde5dd;--w:#fff;--tx:#1a1a1a;--t2:#5a7a5a;--t3:#9aaa9a}
+:root{--v:#1a5c32;--vc:#e8f3e8;--r:#c0392b;--bg:#f4f6f4;--bd:#dde5dd;--w:#fff;--tx:#1a1a1a;--t2:#5a7a5a;--t3:#9aaa9a}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overscroll-behavior:none}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:15px}
-#loader{position:fixed;inset:0;background:var(--v);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;gap:14px}
-#loader h2{font-size:22px;font-weight:800}
-.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:15px;height:100vh;display:flex;flex-direction:column}
+#loader{position:fixed;inset:0;background:var(--v);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;gap:15px}
+.spin{width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-#toast{position:fixed;bottom:calc(env(safe-area-inset-bottom)+72px);left:50%;transform:translateX(-50%) translateY(16px);background:#111;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:9999;pointer-events:none;white-space:nowrap;max-width:92vw}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#toast.ok{background:var(--v)}#toast.err{background:var(--r)}
-#login{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:100;overflow-y:auto}
-.lcard{background:var(--w);border-radius:20px;border:1px solid var(--bd);padding:28px 22px;width:100%;max-width:380px;box-shadow:0 10px 25px rgba(0,0,0,0.05)}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 25px;border-radius:10px;display:none;z-index:10000}
+#login{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+.lcard{background:var(--w);padding:30px;border-radius:20px;width:100%;max-width:380px;box-shadow:0 10px 25px rgba(0,0,0,0.1);border:1px solid var(--bd)}
 .llogo{text-align:center;margin-bottom:25px}
-.llogo .emp{font-size:11px;font-weight:700;color:var(--t2);letter-spacing:.15em;text-transform:uppercase}
-.llogo h1{font-size:32px;font-weight:800;color:var(--v);margin-top:4px}
-.rgrid{display:flex;flex-direction:column;gap:12px;margin-bottom:25px}
-.rbtn{padding:16px;border-radius:15px;border:2px solid var(--bd);background:#fafcfa;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;transition:.2s}
-.rbtn.sel{border-color:var(--v);background:var(--vc);transform:scale(1.02)}
-.rico{font-size:32px}.rlbl{font-size:14px;font-weight:700;color:var(--tx)}.rsub{font-size:11px;color:var(--t3)}
-.pinw{display:flex;gap:10px;position:relative;align-items:center}
-.pinw input{flex:1;padding:14px 45px 14px 16px;border:1.5px solid var(--bd);border-radius:12px;font-size:16px;background:var(--w)}
-.eye-btn{position:absolute;right:110px;background:none;border:none;font-size:20px;cursor:pointer;padding:5px;z-index:5}
-.lerr{color:var(--r);font-size:12px;display:none;margin-top:8px;text-align:center;font-weight:600}
-#app{display:none;height:100%;flex-direction:column}
-#app.show{display:flex}
-.hdr{background:var(--v);color:#fff;padding:env(safe-area-inset-top) 0 0;flex-shrink:0}
-.hdri{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
-.hrol{font-size:11px;background:rgba(255,255,255,.2);padding:4px 12px;border-radius:99px;text-transform:uppercase;font-weight:700}
-.bout{background:rgba(255,255,255,.15);border:none;color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
-.sdot{width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;margin-right:6px}
-.bnav{display:flex;background:var(--w);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
-.btab{flex:1;padding:12px 4px;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--t3);font-size:11px;font-weight:700;cursor:pointer}
-.btab.act{color:var(--v)}
-.btab.act::before{content:'';width:20px;height:3px;background:var(--v);border-radius:99px;margin-bottom:2px}
-.pages{flex:1;overflow-y:auto}
-.page{display:none;padding:16px}
-.page.show{display:block}
-.wcard{background:var(--w);border-radius:15px;border:1px solid var(--bd);padding:15px;margin-bottom:12px;display:flex;gap:14px;align-items:center}
-.av{width:45px;height:45px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;background:var(--vc);color:var(--v)}
-.mcard{background:var(--w);border-radius:15px;border:2px solid var(--bd);padding:16px;margin-bottom:10px}
-.mcard.pre{border-color:var(--v);background:#f9fff9}
-.mtop{display:flex;align-items:center;gap:12px}
-.mchk{width:32px;height:32px;border-radius:10px;border:2px solid var(--bd);cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--w)}
-.mchk.on{background:var(--v);border-color:var(--v);color:#fff}
-.mdet{margin-top:15px;display:none;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
-.mdet.show{display:grid}
-.btn{padding:12px 20px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;transition:.1s;display:inline-flex;align-items:center;justify-content:center}
-.btn:active{transform:scale(0.97)}
-.bg{background:var(--v);color:#fff}
-.bgr{background:#f0f4f0;color:#444;border:1px solid var(--bd)}
-.bfull{width:100%}
-.field label{display:block;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:6px}
-.field input,.field select{width:100%;padding:12px;border:1.5px solid var(--bd);border-radius:10px;font-size:14px}
-.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:center;justify-content:center;padding:20px}
-.mbg.show{display:flex}
-.msheet{background:var(--w);border-radius:20px;width:100%;max-width:450px;padding:25px;max-height:90vh;overflow-y:auto}
+.llogo h1{color:var(--v);font-size:32px}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.rbtn{padding:20px 10px;border-radius:15px;border:2px solid var(--bd);background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px}
+.rbtn.sel{border-color:var(--v);background:var(--vc)}
+.rico{font-size:35px}
+.rlbl{font-size:12px;font-weight:bold}
+.pin-box{display:flex;gap:10px}
+.pin-box input{flex:1;padding:15px;border:1px solid var(--bd);border-radius:12px;font-size:18px;text-align:center}
+#app{display:none;flex:1;flex-direction:column}
+.hdr{background:var(--v);color:#fff;padding:15px;display:flex;justify-content:space-between;align-items:center}
+.pages{flex:1;overflow-y:auto;padding:15px}
+.page{display:none}
+.page.active{display:block}
+.bnav{background:var(--w);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+.btab{flex:1;padding:15px;border:none;background:none;text-align:center;color:var(--t3);font-weight:bold;cursor:pointer}
+.btab.act{color:var(--v);border-top:3px solid var(--v)}
+.wcard{background:var(--w);padding:15px;border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--bd)}
+.mcard{background:var(--w);padding:15px;border-radius:15px;border:2px solid var(--bd);margin-bottom:12px}
+.mcard.presente{border-color:var(--v);background:var(--vc)}
+.btn{padding:15px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;text-align:center}
+.bg{background:var(--v);color:#fff;width:100%}
+.bgr{background:#eee;color:#333}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:12px;margin-bottom:5px;font-weight:bold;color:var(--t2)}
+.field input, .field select{width:100%;padding:12px;border:1px solid var(--bd);border-radius:8px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:2000}
+.modal-content{background:#fff;padding:25px;border-radius:20px;width:100%;max-width:400px}
 </style>
 </head>
 <body>
-<div id="loader"><div class="spin"></div><h2>XURI S.A.</h2></div>
+
+<div id="loader"><div class="spin"></div><h2>Cargando XURI...</h2></div>
 <div id="toast"></div>
+
 <div id="login">
-<div class="lcard">
-  <div class="llogo"><div class="emp">XURI S.A.</div><h1>Eventuales</h1></div>
-  <div class="rgrid">
-    <button type="button" class="rbtn sel" onclick="selRol('asistente',this)"><span class="rico">👩‍💼</span><span class="rlbl">Asistente RRHH</span></button>
-    <button type="button" class="rbtn" onclick="selRol('bodega',this)"><span class="rico">📋</span><span class="rlbl">Jefe Bodega</span></button>
-    <button type="button" class="rbtn" onclick="selRol('supervisor',this)"><span class="rico">👁️</span><span class="rlbl">Supervisor</span></button>
-    <button type="button" class="rbtn" onclick="selRol('jefe',this)"><span class="rico">📊</span><span class="rlbl">Jefe RRHH</span></button>
-  </div>
-  <div class="pinw">
-    <input type="password" id="pin" placeholder="Contraseña">
-    <button type="button" class="eye-btn" onclick="togPin()">👁️</button>
-    <button type="button" class="btn bg" onclick="login()">Entrar</button>
-  </div>
-  <div class="lerr" id="lerr">Contraseña incorrecta</div>
+    <div class="lcard">
+        <div class="llogo"><h1>XURI S.A.</h1><p>Control de Asistencia</p></div>
+        <div class="rgrid">
+            <button type="button" class="rbtn sel" onclick="selRol('asistente', this)"><span class="rico">👩‍💼</span><span class="rlbl">Asistente</span></button>
+            <button type="button" class="rbtn" onclick="selRol('bodega', this)"><span class="rico">📦</span><span class="rlbl">Bodega</span></button>
+            <button type="button" class="rbtn" onclick="selRol('supervisor', this)"><span class="rico">👷</span><span class="rlbl">Supervisor</span></button>
+            <button type="button" class="rbtn" onclick="selRol('jefe', this)"><span class="rico">📊</span><span class="rlbl">Jefe RRHH</span></button>
+        </div>
+        <div class="pin-box">
+            <input type="password" id="pin" placeholder="PIN de acceso">
+            <button type="button" class="btn bg" onclick="login()" style="width:auto">Entrar</button>
+        </div>
+    </div>
 </div>
-</div>
+
 <div id="app">
-  <div class="hdr"><div class="hdri">
-    <div><strong>XURI S.A.</strong></div>
-    <div style="display:flex;align-items:center;gap:10px"><span class="sdot"></span><span id="hrol" class="hrol"></span><button type="button" class="bout" onclick="logout()">Salir</button></div>
-  </div></div>
-  <div class="pages" id="pages"></div>
-  <nav class="bnav" id="bnav"></nav>
+    <div class="hdr">
+        <span id="txtRol" style="font-weight:bold;text-transform:uppercase"></span>
+        <button type="button" onclick="location.reload()" class="btn bgr" style="padding:5px 10px;font-size:12px">Salir</button>
+    </div>
+    <div id="pages" class="pages"></div>
+    <nav id="bnav" class="bnav"></nav>
 </div>
-<div class="mbg" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="msheet"><h3 id="mtitle" style="margin-bottom:20px;color:var(--v)"></h3><div id="mbody"></div></div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3 id="mTitle" style="margin-bottom:15px"></h3>
+        <div id="mBody"></div>
+        <button type="button" class="btn bgr" onclick="closeModal()" style="width:100%;margin-top:10px">Cerrar</button>
+    </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, addDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const FC={apiKey:"AIzaSyCQwdoGTh9_J4YXiU1hBd3mGqJBI72_sBk",authDomain:"marcaciones-eventuales.firebaseapp.com",projectId:"marcaciones-eventuales",storageBucket:"marcaciones-eventuales.firebasestorage.app",messagingSenderId:"147359952515",appId:"1:147359952515:web:93b790a8788db42aec75b6"};
-const app=initializeApp(FC); const db=getFirestore(app);
-const COL={trabajadores:()=>collection(db,'trabajadores'),asistencias:()=>collection(db,'asistencias')};
-const CACHE={trabajadores:[],asistencias:[]};
-const CLAVES={asistente:'asist2026',bodega:'bodega2026',supervisor:'super2026',jefe:'xuri2026'};
+const firebaseConfig = {apiKey: "AIzaSyCQwdoGTh9_J4YXiU1hBd3mGqJBI72_sBk", authDomain: "marcaciones-eventuales.firebaseapp.com", projectId: "marcaciones-eventuales", storageBucket: "marcaciones-eventuales.firebasestorage.app", messagingSenderId: "147359952515", appId: "1:147359952515:web:93b790a8788db42aec75b6"};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-let ROL=null, rolSel='asistente', tabAct='', mFecha=new Date().toISOString().slice(0,10);
+let ROL = null;
+let rolSeleccionado = 'asistente';
+let trabajadores = [];
+let asistencias = [];
+let fechaFiltro = new Date().toISOString().split('T')[0];
 
-window.togPin=()=>{const i=document.getElementById('pin');i.type=i.type==='password'?'text':'password'};
-window.selRol=(r,b)=>{rolSel=r;document.querySelectorAll('.rbtn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel')};
-window.toast=(m,t='ok')=>{const e=document.getElementById('toast');e.textContent=m;e.className='show '+t;setTimeout(()=>e.className='',2500)};
+const CLAVES = { asistente: 'asist2026', bodega: 'bodega2026', supervisor: 'super2026', jefe: 'xuri2026' };
 
-window.login=()=>{
-  if(document.getElementById('pin').value===CLAVES[rolSel]){
-    ROL=rolSel; document.getElementById('login').style.display='none'; document.getElementById('app').classList.add('show');
-    document.getElementById('hrol').textContent=ROL; initNav();
-  }else document.getElementById('lerr').style.display='block';
-};
-window.logout=()=>location.reload();
-
-const NAVS={
-  asistente:[{id:'t',l:'Personal'},{id:'n',l:'Negra'}],
-  bodega:[{id:'m',l:'Marcación'},{id:'h',l:'Historial'}],
-  supervisor:[{id:'v',l:'Vista Personal'}],
-  jefe:[{id:'i',l:'Informes'},{id:'p',l:'Personal'}]
+// --- LOGIN ---
+window.selRol = (r, btn) => {
+    rolSeleccionado = r;
+    document.querySelectorAll('.rbtn').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
 };
 
-function initNav(){
-  const m=NAVS[ROL];
-  document.getElementById('bnav').innerHTML=m.map(t=>`<button type="button" class="btab" onclick="setTab('${t.id}')">${t.l}</button>`).join('');
-  document.getElementById('pages').innerHTML=m.map(t=>`<div id="pg-${t.id}" class="page"></div>`).join('');
-  setTab(m[0].id);
-}
-
-window.setTab=id=>{
-  tabAct=id;
-  document.querySelectorAll('.btab').forEach((b,i)=>b.classList.toggle('act',NAVS[ROL][i].id===id));
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
-  const el=document.getElementById('pg-'+id); if(el){el.classList.add('show'); renderTab();}
-};
-
-function renderTab(){
-  const p=document.getElementById('pg-'+tabAct); if(!p)return;
-  if(tabAct==='t'||tabAct==='p') p.innerHTML=`<button type="button" class="btn bg bfull" onclick="mTrab()" style="margin-bottom:20px">+ NUEVO TRABAJADOR</button>`+CACHE.trabajadores.map(t=>`<div class="wcard"><div class="av">${t.nombres[0]}</div><div style="flex:1"><strong>${t.nombres}</strong><br><small>${t.cedula}</small></div><button type="button" class="btn bgr" onclick="mTrab('${t.id}')">Editar</button></div>`).join('');
-  if(tabAct==='m') p.innerHTML=renderM();
-  if(tabAct==='v') p.innerHTML=`<h3>Personal Activo</h3><br>`+CACHE.trabajadores.map(t=>`<div class="wcard"><div><strong>${t.nombres}</strong><br><small>${t.cedula} - ${t.area}</small></div></div>`).join('');
-}
-
-function renderM(){
-  return `<div class="card"><div class="field"><label>Fecha</label><input type="date" value="${mFecha}" onchange="mFecha=this.value;renderTab()"></div></div>`+
-  CACHE.trabajadores.map(t=>{
-    const a=CACHE.asistencias.find(x=>x.tId===t.id && x.fecha===mFecha)||{e:'08:00',s:'18:00',f:false};
-    return `<div class="mcard ${a.id?'pre':''}">
-      <div class="mtop"><div class="mchk ${a.id?'on':''}" onclick="togM('${t.id}')">${a.id?'✓':''}</div><strong>${t.nombres}</strong></div>
-      <div class="mdet ${a.id?'show':''}" id="det-${t.id}">
-        <div class="field"><label>Entrada</label><input type="time" id="e-${t.id}" value="${a.e}"></div>
-        <div class="field"><label>Salida</label><input type="time" id="s-${t.id}" value="${a.s}"></div>
-        <div class="field" style="display:flex;align-items:center;gap:6px;justify-content:center"><input type="checkbox" id="f-${t.id}" ${a.f?'checked':''}> <label style="margin:0">Feriado</label></div>
-      </div>
-    </div>`;
-  }).join('')+`<button type="button" class="btn bg bfull" onclick="saveM()">GUARDAR MARCACIÓN</button>`;
-}
-
-window.togM=id=>{ document.getElementById('det-'+id).classList.toggle('show'); };
-
-window.saveM=async()=>{
-  const ts=CACHE.trabajadores;
-  for(let t of ts){
-    const d={tId:t.id,fecha:mFecha,e:document.getElementById('e-'+t.id).value,s:document.getElementById('s-'+t.id).value,f:document.getElementById('f-'+t.id).checked,_ts:serverTimestamp()};
-    const ex=CACHE.asistencias.find(x=>x.tId===t.id&&x.fecha===mFecha);
-    if(document.getElementById('det-'+t.id).classList.contains('show')){
-       if(ex) await updateDoc(doc(db,'asistencias',ex.id),d); else await addDoc(COL.asistencias(),d);
+window.login = () => {
+    const pin = document.getElementById('pin').value;
+    if (pin === CLAVES[rolSeleccionado]) {
+        ROL = rolSeleccionado;
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('txtRol').textContent = ROL;
+        renderNav();
+    } else {
+        alert("PIN incorrecto");
     }
-  }
-  toast('Guardado'); renderTab();
 };
 
-window.mTrab=(id)=>{
-  const t=id?CACHE.trabajadores.find(x=>x.id===id):{nombres:'',cedula:'',area:'BODEGA'};
-  openModal(id?'Editar Personal':'Nuevo Personal', `<div class="field"><label>Nombre</label><input id="tn" value="${t.nombres}"></div><br><div class="field"><label>Cédula</label><input id="tc" value="${t.cedula}"></div><br><div class="field"><label>Área</label><input id="ta" value="${t.area}"></div><br><button type="button" class="btn bg bfull" onclick="saveT('${id||''}')">GUARDAR</button>`);
+// --- NAVEGACIÓN ---
+const menus = {
+    asistente: [{id:'lista', n:'Personal', icon:'👥'}],
+    bodega: [{id:'marcar', n:'Asistencia', icon:'📝'}],
+    supervisor: [{id:'ver', n:'Estado', icon:'👁️'}],
+    jefe: [{id:'lista', n:'Personal', icon:'👥'}, {id:'reporte', n:'Reportes', icon:'📊'}]
 };
 
-window.saveT=async(id)=>{
-  const d={nombres:document.getElementById('tn').value,cedula:document.getElementById('tc').value,area:document.getElementById('ta').value,estado:'activo',_ts:serverTimestamp()};
-  if(id) await updateDoc(doc(db,'trabajadores',id),d); else await addDoc(COL.trabajadores(),d);
-  closeModal(); toast('Éxito'); renderTab();
-};
-
-window.openModal=(t,b)=>{document.getElementById('mtitle').textContent=t;document.getElementById('mbody').innerHTML=b;document.getElementById('modal').classList.add('show')};
-window.closeModal=()=>document.getElementById('modal').classList.remove('show');
-
-function startLS(){
-  onSnapshot(query(COL.trabajadores(),orderBy('_ts','desc')),s=>{CACHE.trabajadores=s.docs.map(d=>({...d.data(),id:d.id})); document.getElementById('loader').style.display='none'; if(ROL)renderTab();});
-  onSnapshot(COL.asistencias(),s=>{CACHE.asistencias=s.docs.map(d=>({...d.data(),id:d.id})); if(ROL)renderTab();});
+function renderNav() {
+    const nav = document.getElementById('bnav');
+    nav.innerHTML = menus[ROL].map(m => `<button type="button" class="btab" onclick="setTab('${m.id}')">${m.icon}<br>${m.n}</button>`).join('');
+    setTab(menus[ROL][0].id);
 }
-startLS();
+
+window.setTab = (id) => {
+    document.querySelectorAll('.btab').forEach((b, i) => b.classList.toggle('act', menus[ROL][i].id === id));
+    renderPage(id);
+};
+
+function renderPage(id) {
+    const cont = document.getElementById('pages');
+    if (id === 'lista') {
+        cont.innerHTML = `<button type="button" class="btn bg" onclick="formTrab()">+ NUEVO TRABAJADOR</button><br><br>` + 
+        trabajadores.map(t => `<div class="wcard">
+            <div><b>${t.nombres}</b><br><small>${t.cedula} | ${t.area}</small></div>
+            <button type="button" class="btn bgr" onclick="formTrab('${t.id}')">Editar</button>
+        </div>`).join('');
+    } else if (id === 'marcar') {
+        cont.innerHTML = `<div class="field"><label>Fecha de trabajo</label><input type="date" value="${fechaFiltro}" onchange="cambiarFecha(this.value)"></div>` +
+        trabajadores.map(t => {
+            const asis = asistencias.find(a => a.tId === t.id && a.fecha === fechaFiltro);
+            return `<div class="mcard ${asis ? 'presente' : ''}">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                    <span style="font-size:18px"><b>${t.nombres}</b></span>
+                    <button type="button" class="btn ${asis ? 'bgr' : 'bg'}" onclick="marcarAsis('${t.id}')">${asis ? 'QUITAR' : 'MARCAR'}</button>
+                </div>
+                ${asis ? `<div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px">
+                    <small>E: ${asis.hEntrada}</small> <small>S: ${asis.hSalida}</small>
+                </div>` : ''}
+            </div>`;
+        }).join('');
+    } else {
+        cont.innerHTML = `<p style="text-align:center; padding:20px">Módulo en construcción o vista de consulta.</p>`;
+    }
+}
+
+// --- ACCIONES FIREBASE ---
+window.formTrab = (id = null) => {
+    const t = id ? trabajadores.find(x => x.id === id) : {nombres:'', cedula:'', area:''};
+    const title = id ? 'Editar Trabajador' : 'Nuevo Trabajador';
+    const body = `
+        <div class="field"><label>Nombres Completos</label><input type="text" id="fNom" value="${t.nombres}"></div>
+        <div class="field"><label>Cédula</label><input type="number" id="fCed" value="${t.cedula}"></div>
+        <div class="field"><label>Área</label>
+            <select id="fArea">
+                <option ${t.area==='BODEGA'?'selected':''}>BODEGA</option>
+                <option ${t.area==='PRODUCCION'?'selected':''}>PRODUCCION</option>
+                <option ${t.area==='LIMPIEZA'?'selected':''}>LIMPIEZA</option>
+            </select>
+        </div>
+        <button type="button" class="btn bg" onclick="guardarTrab('${id||''}')">GUARDAR DATOS</button>
+    `;
+    openModal(title, body);
+};
+
+window.guardarTrab = async (id) => {
+    const data = {
+        nombres: document.getElementById('fNom').value.toUpperCase(),
+        cedula: document.getElementById('fCed').value,
+        area: document.getElementById('fArea').value,
+        _ts: serverTimestamp()
+    };
+    if (id) await updateDoc(doc(db, 'trabajadores', id), data);
+    else await addDoc(collection(db, 'trabajadores'), data);
+    closeModal();
+    alert("¡Guardado correctamente!");
+};
+
+window.marcarAsis = async (tId) => {
+    const ex = asistencias.find(a => a.tId === tId && a.fecha === fechaFiltro);
+    if (ex) {
+        // Lógica para quitar si fuera necesario (deleteDoc) o simplemente informar
+        alert("Ya está marcado para esta fecha.");
+    } else {
+        await addDoc(collection(db, 'asistencias'), {
+            tId, fecha: fechaFiltro, hEntrada: '08:00', hSalida: '18:00', _ts: serverTimestamp()
+        });
+        alert("Asistencia registrada");
+    }
+};
+
+window.cambiarFecha = (v) => { fechaFiltro = v; renderPage('marcar'); };
+
+// --- MODAL Y UI ---
+window.openModal = (t, b) => { 
+    document.getElementById('mTitle').textContent = t; 
+    document.getElementById('mBody').innerHTML = b; 
+    document.getElementById('modal').style.display = 'flex'; 
+};
+window.closeModal = () => { document.getElementById('modal').style.display = 'none'; };
+
+// --- CARGA INICIAL ---
+function init() {
+    onSnapshot(query(collection(db, 'trabajadores'), orderBy('_ts', 'desc')), snap => {
+        trabajadores = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        document.getElementById('loader').style.display = 'none';
+        if (ROL) renderPage('lista');
+    });
+    onSnapshot(collection(db, 'asistencias'), snap => {
+        asistencias = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        if (ROL) renderPage('marcar');
+    });
+}
+
+init();
 </script>
 </body>
 </html>
