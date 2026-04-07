@@ -323,7 +323,7 @@ function _scheduleRender(){
     if(!ROL||!tabActual)return;
     var modalOpen=document.getElementById('modal')&&document.getElementById('modal').classList.contains('show');
     if(modalOpen)return;
-    var renders={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,faltas:rFaltas,historial:rHist,bajas:rBajas,marc_admin:rMarcAdmin,faltas_admin:rFaltasAdmin,hist_admin:rHistAdmin,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,transferencias:rTrans,personal:rPers,admin_evt:rAdminEvt,jlnegra:rJLN};
+    var renders={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,faltas:rFaltas,historial:rHist,bajas:rBajas,marc_admin:rMarcAdmin,faltas_admin:rFaltasAdmin,hist_admin:rHistAdmin,sv_vista:rSV,sv_periodos:rSVP,nomina:rNomina};
     if(renders[tabActual])renders[tabActual]();
   },80);
 }
@@ -376,7 +376,7 @@ const MODS={
   bodega:{lbl:'Jefe Bodega',tabs:[{id:'marcacion',ico:'M',lbl:'Marcacion'},{id:'faltas',ico:'!',lbl:'Faltas'},{id:'historial',ico:'H',lbl:'Historial'},{id:'bajas',ico:'B',lbl:'Bajas'}]},
   jadmin:{lbl:'Jefe Admin',tabs:[{id:'marc_admin',ico:'M',lbl:'Marcacion'},{id:'faltas_admin',ico:'!',lbl:'Faltas'},{id:'hist_admin',ico:'H',lbl:'Historial'}]},
   supervisor:{lbl:'Supervisor',tabs:[{id:'sv_vista',ico:'V',lbl:'Vista'},{id:'sv_periodos',ico:'P',lbl:'Periodos'}]},
-  jefe:{lbl:'Jefe RRHH',tabs:[{id:'informe',ico:'I',lbl:'Informe'},{id:'transferencias',ico:'$',lbl:'Pagos'},{id:'personal',ico:'T',lbl:'Personal'},{id:'admin_evt',ico:'A',lbl:'Admin'},{id:'jlnegra',ico:'N',lbl:'Negra'}]}
+  jefe:{lbl:'Jefe RRHH',tabs:[{id:'nomina',ico:'N',lbl:'Nómina'}]}
 };
 function selRol(r,btn){rolSel=r;document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');document.getElementById('pin').value='';document.getElementById('lerr').style.display='none';}
 window.selRol=selRol;
@@ -400,7 +400,7 @@ function setTab(id){
   document.querySelectorAll('.btab').forEach(b=>b.classList.remove('act'));
   document.getElementById('pg-'+id)?.classList.add('show');
   document.getElementById('bt-'+id)?.classList.add('act');
-  const r={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,faltas:rFaltas,historial:rHist,bajas:rBajas,marc_admin:rMarcAdmin,faltas_admin:rFaltasAdmin,hist_admin:rHistAdmin,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,transferencias:rTrans,personal:rPers,admin_evt:rAdminEvt,jlnegra:rJLN};
+  const r={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,faltas:rFaltas,historial:rHist,bajas:rBajas,marc_admin:rMarcAdmin,faltas_admin:rFaltasAdmin,hist_admin:rHistAdmin,sv_vista:rSV,sv_periodos:rSVP,nomina:rNomina};
   if(r[id])r[id]();
 }
 window.setTab=setTab;
@@ -771,10 +771,12 @@ window.guardDia=async function(){
 }
 // HISTORIAL
 function rHist(){
-  const as=[...CACHE.asistencias].sort((a,b)=>b.fecha.localeCompare(a.fecha));
-  pg('historial','<div class="shdr"><div class="stit">Historial de asistencias</div></div>'+
+  // Filtrar solo trabajadores de BODEGA para el historial de Jefe Bodega
+  const bodegaWorkers=CACHE.trabajadores.filter(t=>t.area==='BODEGA');
+  const as=[...CACHE.asistencias].filter(a=>bodegaWorkers.find(t=>t.id===a.tId)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  pg('historial','<div class="shdr"><div class="stit">Historial de asistencias - BODEGA</div></div>'+
   (as.length?'<div class="iwrap"><table><thead><tr><th>Fecha</th><th>Trabajador</th><th>Entrada</th><th>Atraso</th><th>Pago</th><th></th></tr></thead><tbody>'+
-  as.map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<tr><td style="white-space:nowrap">'+fmtF(a.fecha)+'</td><td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.area+'</span></td><td>'+a.entrada+'</td><td class="'+(c.atrasoH>0?'dc':'tr')+'">'+( c.atrasoH>0?c.atrasoH+'h':'--')+'</td><td class="tr"><strong>$'+c.pago.toFixed(2)+'</strong></td><td><div style="display:flex;gap:4px"><button class="btn bgr bsm" onclick="mEdA(\''+a.id+'\')">Ed</button><button class="btn br bsm" onclick="mBorr(\'asistencia\',\''+a.id+'\')">X</button></div></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Sin registros de asistencia</div>'));
+  as.map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<tr><td style="white-space:nowrap">'+fmtF(a.fecha)+'</td><td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.area+'</span></td><td>'+a.entrada+'</td><td class="'+(c.atrasoH>0?'dc':'tr')+'">'+( c.atrasoH>0?c.atrasoH+'h':'--')+'</td><td class="tr"><strong>$'+c.pago.toFixed(2)+'</strong></td><td><div style="display:flex;gap:4px"><button class="btn bgr bsm" onclick="mEdA(\''+a.id+'\')">Ed</button><button class="btn br bsm" onclick="mBorr(\'asistencia\',\''+a.id+'\')">X</button></div></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Sin registros de asistencia para BODEGA</div>'));
 }
 function mEdA(id){
   const a=CACHE.asistencias.find(x=>x.id===id);const t=CACHE.trabajadores.find(x=>x.id===a.tId);
@@ -928,13 +930,13 @@ async function gPer(id){
   if(id){await fupd('periodos',id,d);toast('Periodo actualizado');}else{await fadd('periodos',d);toast('Periodo registrado correctamente');}
 }
 window.gPer=gPer;
-// JEFE RRHH
+// JEFE RRHH - NÓMINA UNIFICADA
 let iD='',iH='',iA='';
-function rInf(){
+function rNomina(){
   const n=new Date();if(!iD)iD=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);if(!iH)iH=hoy();
-  pg('informe','<div class="stit" style="margin-bottom:12px">Informe por periodo</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="id" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="ih" value="'+iH+'" onchange="iH=this.value"></div></div><div class="field" style="margin-bottom:12px"><label>Area</label><select id="ia" onchange="iA=this.value"><option value="">Todas las areas</option>'+selOpts(AREAS,iA)+'</select></div><button class="btn bg bfull" onclick="genInf()">Generar informe</button></div><div id="inf-res"></div>');
+  pg('nomina','<div class="stit" style="margin-bottom:12px">Generar nómina de pago</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="id" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="ih" value="'+iH+'" onchange="iH=this.value"></div></div><div class="field" style="margin-bottom:12px"><label>Area</label><select id="ia" onchange="iA=this.value"><option value="">Todas las areas (Nómina junta)</option>'+selOpts(AREAS,iA)+'</select></div><button class="btn bg bfull" onclick="genNomina()">Generar nómina</button></div><div id="nom-res"></div>');
 }
-window.genInf=function(){
+window.genNomina=function(){
   const desde=document.getElementById('id').value,hasta=document.getElementById('ih').value,area=document.getElementById('ia').value;
   iD=desde;iH=hasta;iA=area;
   // Si no se selecciona área, mostrar todos los trabajadores juntos (nómina junta)
@@ -960,10 +962,10 @@ window.genInf=function(){
     var jornada = t.area === 'ADMINISTRACION' ? 'Mensual' : '240';
     return'<tr><td class="tc">'+n+'</td><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+t.cargo+'</td><td style="white-space:nowrap">'+fmtF(t.fechaIngreso)+'</td><td class="tc">'+jornada+'</td><td><span class="chip">'+t.area+'</span></td><td class="tr">'+sDiario+'</td><td class="tc">'+r.dias+'</td><td class="tr'+(r.descVal>0?' dc':'')+'">'+( r.atrasoH>0?r.atrasoH+'h -$'+r.descVal.toFixed(2):'--')+'</td><td class="tc">'+(justificados>0?justificados:'--')+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>';
   }).filter(Boolean);
-  if(!fi.length){document.getElementById('inf-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
+  if(!fi.length){document.getElementById('nom-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
   const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
   const per=d1.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'})+' al '+d2.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('inf-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nomina mensual</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Faltas</th><th>Justif.</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="10" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button class="btn bb" onclick="impr(\'nomina\',\''+desde+'\',\''+hasta+'\',\''+area+'\')">Imprimir nomina</button>';
+  document.getElementById('nom-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nómina de pago</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Faltas</th><th>Justif.</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="10" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button class="btn bb" onclick="impr(\'nomina\',\''+desde+'\',\''+hasta+'\',\''+area+'\')">Imprimir nómina de pago</button>';
 };
 
 // JEFE RRHH - FALTAS / AUSENCIAS
