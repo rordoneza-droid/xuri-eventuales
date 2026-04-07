@@ -228,10 +228,22 @@ function fmtF(iso){if(!iso)return'--';const[y,m,d]=iso.split('-');return d+'/'+m
 function fmtFL(iso){if(!iso)return'--';return new Date(iso+'T12:00:00').toLocaleDateString('es-EC',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
 function inic(n){return n.trim().split(' ').filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join('')}
 function toast(msg,tipo='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+tipo;clearTimeout(t._t);t._t=setTimeout(()=>t.className='',2800)}
-// calcPAdmin: valor dia = sueldo / 30 (simple, sin horas)
-function calcPAdmin(sueldo){
+// calcPAdmin: valor dia = sueldo / 30, con doble valor para fin de semana y feriado
+function calcPAdmin(fecha, entrada, salida, feriado, sueldo){
   sueldo=sueldo||500;
-  return Math.round((sueldo/30)*100)/100;
+  const d=new Date(fecha+'T12:00:00');
+  const dow=d.getDay();
+  const fin=dow===0||dow===6;
+  
+  // Valor base del día
+  let valorDia=sueldo/30;
+  
+  // Doble valor para fin de semana o feriado
+  if(fin||feriado){
+    valorDia*=2;
+  }
+  
+  return Math.round(valorDia*100)/100;
 }
 
 // resTAdmin: calcula pago con semana integral
@@ -265,9 +277,19 @@ function resTAdmin(tId,sueldo,desde,hasta){
   Object.keys(semanas).forEach(function(k){
     if(semanas[k]>=1){semanasIntegrales++;bonoDias+=2;} // Bono siempre que trabaje al menos 1 dia de esa semana
   });
+  // Calcular pago real considerando días especiales
+  var pagoReal=0;
+  asist.forEach(function(a){
+    var valorDiaReal=calcPAdmin(a.fecha,a.entrada,a.salida,a.feriado,sueldo);
+    pagoReal+=valorDiaReal;
+  });
+  
+  // Agregar bono de días de fin de semana (sábado y domingo) con valor normal
+  var pagoBono=bonoDias*valorDia;
+  var pagoTotal=pagoReal+pagoBono;
   var totalDias=diasTrabajados+bonoDias;
-  var pago=Math.round(totalDias*valorDia*100)/100;
-  return{pago:pago,diasTrabajados:diasTrabajados,semanasIntegrales:semanasIntegrales,bonoDias:bonoDias,totalDias:totalDias,valorDia:valorDia};
+  
+  return{pago:Math.round(pagoTotal*100)/100,diasTrabajados:diasTrabajados,semanasIntegrales:semanasIntegrales,bonoDias:bonoDias,totalDias:totalDias,valorDia:valorDia};
 }
 
 function calcP(fecha,entrada,salida,feriado){
@@ -1250,7 +1272,7 @@ function rMarcAdmin(){
 
   var rows=act.map(function(t){
     var m=aMap[t.id]||{presente:false,entrada:'08:00',salida:'17:00',feriado:eFin,obs:''};
-    var valorDia=calcPAdmin(t.sueldo||500);
+    var valorDia=calcPAdmin(aFecha,m.entrada,m.salida,m.feriado,t.sueldo||500);
     var pagoHtml=m.presente?'<div class="mpago">$'+valorDia.toFixed(2)+'</div><div style="font-size:10px;color:var(--t2)">1 dia</div>':'';
     var eFinVal=eFin?1:0;
     return '<div class="mcard'+(m.presente?' pre':'')+'" id="ama-'+t.id+'">'+
@@ -1307,7 +1329,7 @@ window.togABtn=function(el){
     if(m.presente){
       // Find the trabajador sueldo from CACHE
       var tw=CACHE.trabajadores.find(function(x){return x.id===tId;});
-      var vd=calcPAdmin(tw?tw.sueldo||500:500);
+      var vd=calcPAdmin(aFecha,aMap[tId].entrada,aMap[tId].salida,aMap[tId].feriado,tw?tw.sueldo||500:500);
       pd.innerHTML='<div class="mpago">$'+vd.toFixed(2)+'</div><div style="font-size:10px;color:var(--t2)">1 dia</div>';
     } else {
       pd.innerHTML='';
