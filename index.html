@@ -743,7 +743,7 @@ window.updC=function(tId,eFin){
 };
 
 window.guardDia=async function(){
-  var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo';});
+  var act=CACHE.trabajadores.filter(function(t){return t.estado==='activo'&&t.area==='BODEGA';});
   var btns=document.querySelectorAll('[onclick="guardDia()"]');
   btns.forEach(function(b){b.disabled=true;b.textContent='Guardando...';});
   try{
@@ -761,7 +761,7 @@ window.guardDia=async function(){
         obs:obsEl?obsEl.value:''
       };
     });
-    // Borrar registros existentes del dia
+    // Borrar registros existentes del dia (solo BODEGA)
     await Promise.all(CACHE.asistencias.filter(function(a){return a.fecha===mFecha&&act.find(function(t){return t.id===a.tId;});}).map(function(a){return fdel('asistencias',a.id);}));
     // Guardar nuevos
     await Promise.all(registros.map(function(r){return fadd('asistencias',r);}));
