@@ -559,8 +559,10 @@ async function execBorr(tipo,id){
       await fdel('asistencias',id);
       toast('Registro eliminado correctamente');
     } else if(tipo==='negra'){
+      var nReg=CACHE.listaNegra.find(x=>x.id===id);
       await fdel('listaNegra',id);
-      toast('Eliminado de lista negra');
+      if(nReg&&nReg.tId){await fupd('trabajadores',nReg.tId,{estado:'activo',fechaBaja:'',motivoBaja:''});}
+      toast('Eliminado de lista negra y reactivado');
     } else if(tipo==='periodo'){
       await fdel('periodos',id);
       toast('Periodo eliminado');
