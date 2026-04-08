@@ -182,7 +182,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <button class="rbtn sel" onclick="selRol('asistente',this)"><span class="rico">&#x1F469;&#x200D;&#x1F4BC;</span><span class="rlbl">Asistente RRHH</span><span class="rsub">Registra personas</span></button>
     <button class="rbtn" onclick="selRol('bodega',this)"><span class="rico">&#x1F4CB;</span><span class="rlbl">Jefe Bodega</span><span class="rsub">Marcacion diaria</span></button>
     <button class="rbtn" onclick="selRol('jadmin',this)"><span class="rico">&#x1F4BB;</span><span class="rlbl">Jefe Admin</span><span class="rsub">Marca administrativos</span></button>
-    <button class="rbtn" onclick="selRol('supervisor',this)"><span class="rico">&#x1F441;&#xFE0F;</span><span class="rlbl">Supervisor</span><span class="rsub">Solo visualiza</span></button>
     <button class="rbtn" onclick="selRol('jefe',this)"><span class="rico">&#x1F4CA;</span><span class="rlbl">Jefe RRHH</span><span class="rsub">Informes y pagos</span></button>
   </div>
   <!-- FIX 1: Eye icon to show/hide password -->
@@ -221,7 +220,7 @@ const CACHE={trabajadores:[],asistencias:[],listaNegra:[],periodos:[],_loaded:{}
 const AREAS=['BODEGA','ADMINISTRACION'];
 // CARGOS removed - cargo is now a free text field
 const BANCOS=['Banco Pichincha','Banco Guayaquil','Banco del Pacifico','Produbanco','Banco Internacional','BanEcuador','Cooperativa JEP','Otro'];
-const CLAVES={asistente:'asist2026',bodega:'bodega2026',jadmin:'admin2026',supervisor:'super2026',jefe:'xuri2026'};
+const CLAVES={asistente:'asist2026',bodega:'bodega2026',jadmin:'admin2026',jefe:'xuri2026'};
 function hoy(){return new Date().toISOString().slice(0,10)}
 function toMin(t){const[h,m]=t.split(':').map(Number);return h*60+m}
 function fmtF(iso){if(!iso)return'--';const[y,m,d]=iso.split('-');return d+'/'+m+'/'+y}
@@ -380,7 +379,7 @@ const MODS={
   asistente:{lbl:'Asistente RRHH',tabs:[{id:'trabajadores',ico:'T',lbl:'Trabajadores'},{id:'estados',ico:'R',lbl:'Estados'},{id:'lnegra',ico:'N',lbl:'Lista negra'}]},
   bodega:{lbl:'Jefe Bodega',tabs:[{id:'marcacion',ico:'M',lbl:'Marcacion'},{id:'faltas',ico:'!',lbl:'Faltas'},{id:'historial',ico:'H',lbl:'Historial'},{id:'bajas',ico:'B',lbl:'Bajas'}]},
   jadmin:{lbl:'Jefe Admin',tabs:[{id:'marc_admin',ico:'M',lbl:'Marcacion'},{id:'faltas_admin',ico:'!',lbl:'Faltas'},{id:'hist_admin',ico:'H',lbl:'Historial'}]},
-  supervisor:{lbl:'Supervisor',tabs:[{id:'sv_vista',ico:'V',lbl:'Vista'},{id:'sv_periodos',ico:'P',lbl:'Periodos'}]},
+  supervisor:{lbl:'Supervisor',tabs:[]},
   jefe:{lbl:'Jefe RRHH',tabs:[{id:'nomina',ico:'N',lbl:'Nómina'}]}
 };
 function selRol(r,btn){rolSel=r;document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');document.getElementById('pin').value='';document.getElementById('lerr').style.display='none';}
@@ -491,14 +490,18 @@ window.confInact=async function(){
 }
 function selOpts(arr,val){return arr.map(a=>'<option'+(a===val?' selected':'')+'>'+a+'</option>').join('')}
 function mTrab(id){
-  const t=id?CACHE.trabajadores.find(x=>x.id===id):{nombres:'',cedula:'',cuenta:'',banco:'Banco Pichincha',tipoCuenta:'Ahorros',email:'',tel:'',dir:'',cargo:'',area:AREAS[0],fechaIngreso:hoy()};
+  const t=id?CACHE.trabajadores.find(x=>x.id===id):{nombres:'',cedula:'',cuenta:'',banco:'Banco Pichincha',tipoCuenta:'Ahorros',email:'',tel:'',dir:'',cargo:'',area:AREAS[0],fechaIngreso:hoy(),tipoPago:'diario',valorPago:''};
   openModal(id?'Editar trabajador':'Nuevo eventual',
     '<div class="field" style="margin-bottom:10px"><label>Nombres completos *</label><input id="tn" value="'+(t.nombres||'')+'"></div>'+
     '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Cedula *</label><input id="tc" value="'+(t.cedula||'')+'"></div><div class="field"><label>Telefono</label><input id="ttel" value="'+(t.tel||'')+'"></div></div>'+
     '<div class="field" style="margin-bottom:10px"><label>Correo</label><input id="tem" type="email" value="'+(t.email||'')+'"></div>'+
     '<div class="field" style="margin-bottom:10px"><label>Direccion</label><input id="tdir" value="'+(t.dir||'')+'"></div>'+
-    '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Area *</label><select id="ta" onchange="toggleSueldo(this.value)">'+selOpts(AREAS,t.area)+'</select></div><div class="field"><label>Cargo *</label><input id="tcar" value="'+(t.cargo||'')+'" placeholder="Escriba el cargo..."></div></div>'+
-    '<div class="field" id="sueldo-field" style="margin-bottom:10px;display:'+(t.area==='ADMINISTRACION'?'block':'none')+'"><label>Sueldo mensual ($) *</label><input type="number" id="tsueldo" min="0" step="0.01" value="'+(t.sueldo||'')+'" placeholder="Ej: 500.00"></div>'+
+    '<div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Area *</label><select id="ta">'+selOpts(AREAS,t.area)+'</select></div><div class="field"><label>Cargo *</label><input id="tcar" value="'+(t.cargo||'')+'" placeholder="Escriba el cargo..."></div></div>'+
+    '<div class="sep"></div><p style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Tipo de pago</p>'+
+    '<div class="fg fg2" style="margin-bottom:10px">'+
+      '<div class="field"><label>Tipo *</label><select id="ttipopago"><option value="diario"'+(t.tipoPago==='diario'?' selected':'')+'>Diario</option><option value="mensual"'+(t.tipoPago==='mensual'?' selected':'')+'>Mensual</option></select></div>'+
+      '<div class="field"><label>Valor ($) *</label><input type="number" id="tvalor" min="0" step="0.01" value="'+(t.valorPago||'')+'" placeholder="Diario: 20 / Mensual: 500"></div>'+
+    '</div>'+
     '<div class="field" style="margin-bottom:10px"><label>Fecha primer ingreso *</label><input type="date" id="tfi" value="'+(t.fechaIngreso||hoy())+'"></div>'+
     '<div class="sep"></div><p style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Datos bancarios</p>'+
     '<div class="field" style="margin-bottom:10px"><label>Banco</label><select id="tbco">'+selOpts(BANCOS,t.banco)+'</select></div>'+
@@ -512,8 +515,9 @@ async function guardT(id){
   const n=document.getElementById('tn').value.trim(),c=document.getElementById('tc').value.trim();
   if(!n||!c){toast('Nombre y cedula son obligatorios','err');return}
   const btn=document.getElementById('btnGT');btn.disabled=true;btn.textContent='Guardando...';
-  var sueldoEl=document.getElementById('tsueldo');var sueldoVal=sueldoEl?parseFloat(sueldoEl.value)||0:0;
-  const d={nombres:n,cedula:c,tel:document.getElementById('ttel').value.trim(),email:document.getElementById('tem').value.trim(),dir:document.getElementById('tdir').value.trim(),area:document.getElementById('ta').value,cargo:document.getElementById('tcar').value,fechaIngreso:document.getElementById('tfi').value,banco:document.getElementById('tbco').value,tipoCuenta:document.getElementById('ttipo').value,cuenta:document.getElementById('tcta').value.trim(),sueldo:sueldoVal};
+  var tipoPago=document.getElementById('ttipopago').value;
+  var valorPago=parseFloat(document.getElementById('tvalor').value)||0;
+  const d={nombres:n,cedula:c,tel:document.getElementById('ttel').value.trim(),email:document.getElementById('tem').value.trim(),dir:document.getElementById('tdir').value.trim(),area:document.getElementById('ta').value,cargo:document.getElementById('tcar').value,fechaIngreso:document.getElementById('tfi').value,banco:document.getElementById('tbco').value,tipoCuenta:document.getElementById('ttipo').value,cuenta:document.getElementById('tcta').value.trim(),tipoPago:tipoPago,valorPago:valorPago,sueldo:tipoPago==='mensual'?valorPago:0};
   try{
     if(id){
       await fupd('trabajadores',id,d);
@@ -638,47 +642,46 @@ function rM(){
   const d=new Date(mFecha+'T12:00:00');
   const eFin=d.getDay()===0||d.getDay()===6;
 
-  // Cargar desde Firebase solo si cambia la fecha (preservar ediciones en curso)
   if(mFechaLoaded!==mFecha){
     mFechaLoaded=mFecha;
     mMap={};
-    CACHE.asistencias.filter(function(a){return a.fecha===mFecha;}).forEach(function(a){
+    CACHE.asistencias.filter(function(a){return a.fecha===mFecha&&act.find(function(t){return t.id===a.tId;});}).forEach(function(a){
       if(a.falta){
-        mMap[a.tId]={presente:false,falta:true,entrada:'00:00',salida:'00:00',feriado:false,obs:a.obs||''};
+        mMap[a.tId]={presente:false,falta:true,entrada:'08:00',salida:'18:00',feriado:false,atraso:0,almuerzo:false,obs:a.obs||''};
       } else {
-        mMap[a.tId]={presente:true,falta:false,entrada:a.entrada,salida:a.salida,feriado:a.feriado,obs:a.obs||''};
+        mMap[a.tId]={presente:true,falta:false,entrada:a.entrada,salida:a.salida,feriado:a.feriado,atraso:a.atraso||0,almuerzo:a.almuerzo||false,obs:a.obs||''};
       }
     });
   } else {
-    // Re-render de Firebase: solo agregar trabajadores nuevos que no habia antes
-    CACHE.asistencias.filter(function(a){return a.fecha===mFecha;}).forEach(function(a){
+    CACHE.asistencias.filter(function(a){return a.fecha===mFecha&&act.find(function(t){return t.id===a.tId;});}).forEach(function(a){
       if(!mMap[a.tId]){
         if(a.falta){
-          mMap[a.tId]={presente:false,falta:true,entrada:'00:00',salida:'00:00',feriado:false,obs:a.obs||''};
+          mMap[a.tId]={presente:false,falta:true,entrada:'08:00',salida:'18:00',feriado:false,atraso:0,almuerzo:false,obs:a.obs||''};
         } else {
-          mMap[a.tId]={presente:true,falta:false,entrada:a.entrada,salida:a.salida,feriado:a.feriado,obs:a.obs||''};
+          mMap[a.tId]={presente:true,falta:false,entrada:a.entrada,salida:a.salida,feriado:a.feriado,atraso:a.atraso||0,almuerzo:a.almuerzo||false,obs:a.obs||''};
         }
       }
     });
   }
 
   var rows=act.map(function(t){
-    var m=mMap[t.id]||{presente:false,entrada:'08:00',salida:'18:00',feriado:eFin,obs:''};
-    var c=m.presente?calcP(mFecha,m.entrada,m.salida,m.feriado):null;
-    var pagoHtml=c?'<div class="mpago">$'+c.pago.toFixed(2)+'</div>'+(c.atrasoH>0?'<div class="matr">-'+c.atrasoH+'h (-$'+c.descVal.toFixed(2)+')</div>':''):'';
+    var m=mMap[t.id]||{presente:false,entrada:'08:00',salida:'18:00',feriado:eFin,atraso:0,almuerzo:false,obs:''};
     var eFinVal=eFin?1:0;
+    var esFin=eFin||m.feriado;
     return '<div class="mcard'+(m.presente?' pre':m.falta?' style=\"border-color:var(--r);background:#fde8e4\"':'')+'" id="mc-'+t.id+'">'+
       '<div class="mtop">'+
         '<div class="mchk'+(m.presente?' on':'')+'" id="mchk-'+t.id+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onclick="togPBtn(this)">'+(m.presente?'&#x2713;':m.falta?'&#x2717;':'')+'</div>'+
         '<div style="flex:1"><div class="mname">'+t.nombres+'</div><div class="marea">'+t.area+(m.falta?' &nbsp;<span style="background:var(--r);color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700">FALTA</span>':'')+'</div></div>'+
-        '<div id="mpd-'+t.id+'" style="text-align:right">'+pagoHtml+'</div>'+
       '</div>'+
       '<div class="mdet'+(m.presente?' show':'')+'" id="mdet-'+t.id+'">'+
-        '<div class="mtimes">'+
-          '<div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updCBtn(this)"></div>'+
-          '<div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updCBtn(this)"></div>'+
-        '</div>'+
-        '<label class="mfer-row"><input type="checkbox" id="mfer-'+t.id+'" '+(m.feriado?'checked':'')+' data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updCBtn(this)" style="width:18px;height:18px;accent-color:var(--v)"><span>Feriado (tarifa $25)</span></label>'+
+        (esFin
+          ? '<div class="mtimes">'+
+              '<div class="field"><label>Entrada</label><input type="time" id="ment-'+t.id+'" value="'+m.entrada+'" data-id="'+t.id+'"></div>'+
+              '<div class="field"><label>Salida</label><input type="time" id="msal-'+t.id+'" value="'+m.salida+'" data-id="'+t.id+'"></div>'+
+            '</div>'+
+            '<label class="mfer-row"><input type="checkbox" id="malm-'+t.id+'" '+(m.almuerzo?'checked':'')+' style="width:18px;height:18px;accent-color:var(--v)"><span>Tomo hora de almuerzo (se descuenta 1h)</span></label>'
+          : '<div class="field" style="margin-bottom:8px"><label>Atraso (horas)</label><input type="number" id="matr-'+t.id+'" min="0" max="9" step="0.5" value="'+(m.atraso||0)+'" placeholder="0" style="max-width:120px"></div>'
+        )+
         '<div class="field"><label>Observacion</label><input id="mobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div>'+
       '</div>'+
       (!m.presente?
@@ -694,9 +697,9 @@ function rM(){
   }).join('');
 
   pg('marcacion',
-    '<div class="shdr"><div><div class="stit">Marcacion diaria</div><div class="ssub">'+fmtFL(mFecha)+'</div></div>'+
+    '<div class="shdr"><div><div class="stit">Marcacion diaria - Bodega</div><div class="ssub">'+fmtFL(mFecha)+'</div></div>'+
     '<div class="field" style="margin:0"><input type="date" id="mfd" value="'+mFecha+'" onchange="chFecha(this.value)" style="font-size:13px;padding:7px 10px"></div></div>'+
-    (eFin?'<div class="alerto">Fin de semana - tarifa $25/dia</div>':'')+
+    (eFin?'<div class="alerto">Fin de semana - registre hora entrada, salida y si tomo almuerzo</div>':'')+
     bajas.map(function(t){return'<div class="nbaja"><strong>Aviso de baja:</strong> '+t.nombres+' fue dado de baja el '+fmtF(t.fechaBaja)+(t.motivoBaja?' - '+t.motivoBaja:'')+'. No debe marcarse.</div>';}).join('')+
     rows+
     '<div style="position:sticky;bottom:8px;margin-top:16px;padding:4px">'+
@@ -747,17 +750,22 @@ window.guardDia=async function(){
   var btns=document.querySelectorAll('[onclick="guardDia()"]');
   btns.forEach(function(b){b.disabled=true;b.textContent='Guardando...';});
   try{
-    // Leer valores actuales del DOM ANTES de cualquier operacion async
+    var d=new Date(mFecha+'T12:00:00');
+    var eFin=d.getDay()===0||d.getDay()===6;
     var registros=act.filter(function(t){return mMap[t.id]&&mMap[t.id].presente;}).map(function(t){
+      var esFin=eFin||mMap[t.id].feriado;
       var entEl=document.getElementById('ment-'+t.id);
       var salEl=document.getElementById('msal-'+t.id);
-      var ferEl=document.getElementById('mfer-'+t.id);
+      var almEl=document.getElementById('malm-'+t.id);
+      var atrEl=document.getElementById('matr-'+t.id);
       var obsEl=document.getElementById('mobs-'+t.id);
       return{
         tId:t.id,fecha:mFecha,
-        entrada:entEl?entEl.value:mMap[t.id].entrada,
-        salida:salEl?salEl.value:mMap[t.id].salida,
-        feriado:ferEl?ferEl.checked:false,
+        entrada:entEl?entEl.value:'08:00',
+        salida:salEl?salEl.value:'18:00',
+        feriado:esFin,
+        almuerzo:almEl?almEl.checked:false,
+        atraso:atrEl?parseFloat(atrEl.value)||0:0,
         obs:obsEl?obsEl.value:''
       };
     });
@@ -765,9 +773,8 @@ window.guardDia=async function(){
     await Promise.all(CACHE.asistencias.filter(function(a){return a.fecha===mFecha&&act.find(function(t){return t.id===a.tId;});}).map(function(a){return fdel('asistencias',a.id);}));
     // Guardar nuevos
     await Promise.all(registros.map(function(r){return fadd('asistencias',r);}));
-    // Actualizar mMap con lo guardado para que el listener no lo pise
     registros.forEach(function(r){
-      mMap[r.tId]={presente:true,entrada:r.entrada,salida:r.salida,feriado:r.feriado,obs:r.obs};
+      mMap[r.tId]={presente:true,entrada:r.entrada,salida:r.salida,feriado:r.feriado,almuerzo:r.almuerzo,atraso:r.atraso,obs:r.obs};
     });
     mFechaLoaded=mFecha;
     toast('Marcacion guardada: '+registros.length+' persona'+(registros.length!==1?'s':''));
@@ -776,12 +783,28 @@ window.guardDia=async function(){
 }
 // HISTORIAL
 function rHist(){
-  // Filtrar solo trabajadores de BODEGA para el historial de Jefe Bodega
   const bodegaWorkers=CACHE.trabajadores.filter(t=>t.area==='BODEGA');
+  const hoyStr=hoy();
   const as=[...CACHE.asistencias].filter(a=>bodegaWorkers.find(t=>t.id===a.tId)).sort((a,b)=>b.fecha.localeCompare(a.fecha));
-  pg('historial','<div class="shdr"><div class="stit">Historial de asistencias - BODEGA</div></div>'+
-  (as.length?'<div class="iwrap"><table><thead><tr><th>Fecha</th><th>Trabajador</th><th>Entrada</th><th>Atraso</th><th>Pago</th><th></th></tr></thead><tbody>'+
-  as.map(a=>{const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';const c=calcP(a.fecha,a.entrada,a.salida,a.feriado);return'<tr><td style="white-space:nowrap">'+fmtF(a.fecha)+'</td><td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.area+'</span></td><td>'+a.entrada+'</td><td class="'+(c.atrasoH>0?'dc':'tr')+'">'+( c.atrasoH>0?c.atrasoH+'h':'--')+'</td><td class="tr"><strong>$'+c.pago.toFixed(2)+'</strong></td><td><div style="display:flex;gap:4px"><button class="btn bgr bsm" onclick="mEdA(\''+a.id+'\')">Ed</button><button class="btn br bsm" onclick="mBorr(\'asistencia\',\''+a.id+'\')">X</button></div></td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">Sin registros de asistencia para BODEGA</div>'));
+  pg('historial','<div class="shdr"><div class="stit">Historial de asistencias - BODEGA</div><div class="ssub">Solo lectura. Para corregir dias anteriores, contacte a RRHH.</div></div>'+
+  (as.length?'<div class="iwrap"><table><thead><tr><th>Fecha</th><th>Trabajador</th><th>Estado</th><th>Detalle</th></tr></thead><tbody>'+
+  as.map(a=>{
+    const t=CACHE.trabajadores.find(x=>x.id===a.tId);if(!t)return'';
+    const esFalta=a.falta;
+    const esJ=a.justificado;
+    const d=new Date(a.fecha+'T12:00:00');
+    const esFin=d.getDay()===0||d.getDay()===6||a.feriado;
+    var detalle='';
+    if(esFalta) detalle='<span style="color:var(--r);font-weight:700">FALTA</span>';
+    else if(esJ) detalle='<span style="color:var(--a);font-weight:700">Justificado</span>';
+    else if(esFin) detalle=a.entrada+' - '+a.salida+(a.almuerzo?' · almuerzo desc.':'');
+    else detalle='Presente'+(a.atraso>0?' · <span style="color:var(--r)">atraso '+a.atraso+'h</span>':'');
+    return'<tr><td style="white-space:nowrap">'+fmtF(a.fecha)+'</td>'+
+      '<td><strong>'+t.nombres+'</strong></td>'+
+      '<td>'+(esFalta?'<span class="bdg bdg-r">Falta</span>':esJ?'<span class="bdg bdg-o">Justif.</span>':esFin?'<span class="bdg bdg-b">Fin sem.</span>':'<span class="bdg bdg-g">Presente</span>')+'</td>'+
+      '<td>'+detalle+'</td>'+
+    '</tr>';
+  }).join('')+'</tbody></table></div>':'<div class="empty">Sin registros de asistencia para BODEGA</div>'));
 }
 function mEdA(id){
   const a=CACHE.asistencias.find(x=>x.id===id);const t=CACHE.trabajadores.find(x=>x.id===a.tId);
@@ -939,8 +962,28 @@ window.gPer=gPer;
 let iD='',iH='',iA='';
 function rNomina(){
   const n=new Date();if(!iD)iD=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);if(!iH)iH=hoy();
-  pg('nomina','<div class="stit" style="margin-bottom:12px">Cálculo de nómina sencillo</div><div class="card"><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Desde</label><input type="date" id="id" value="'+iD+'" onchange="iD=this.value"></div><div class="field"><label>Hasta</label><input type="date" id="ih" value="'+iH+'" onchange="iH=this.value"></div></div><div class="field" style="margin-bottom:12px"><label>Area</label><select id="ia" onchange="iA=this.value"><option value="">Todas las areas (Nómina junta)</option>'+selOpts(AREAS,iA)+'</select></div></div><div class="brow" style="gap:8px"><button class="btn bg" style="flex:1" onclick="genNomina()">Generar informe automático</button><button class="btn ba" style="flex:1" onclick="rNominaManual()">Cálculo manual</button></div></div><div id="nom-res"></div><div id="nom-manual" style="display:none;margin-top:20px"><div class="card"><div class="stit" style="margin-bottom:12px">Agregar trabajador manualmente</div><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Nombre</label><input type="text" id="mn-nombre" placeholder="Nombre del trabajador"></div><div class="field"><label>Cédula</label><input type="text" id="mn-cedula" placeholder="Cédula"></div><div class="field"><label>Cargo</label><input type="text" id="mn-cargo" placeholder="Cargo"></div><div class="field"><label>Área</label><select id="mn-area"><option value="ADMINISTRACION">Administración</option><option value="BODEGA">Bodega</option></select></div><div class="fg fg2" style="margin-bottom:10px"><div class="field"><label>Sueldo mensual</label><input type="number" id="mn-sueldo" placeholder="Ej: 482"></div><div class="field"><label>Valor diario</label><input type="number" id="mn-diario" placeholder="Ej: 16.06" step="0.01"></div><div class="field"><label>Días trabajados</label><input type="number" id="mn-dias" placeholder="Ej: 15" min="0"></div><div class="field"><label>Días bono (fin de semana)</label><input type="number" id="mn-bono" placeholder="Ej: 4" min="0"></div></div><div class="field" style="margin-bottom:12px"><label>Observaciones</label><input type="text" id="mn-obs" placeholder="Observaciones"></div></div><button class="btn bg bfull" onclick="agregarTrabajadorManual()">Agregar a nómina</button></div></div><div id="nom-manual-res"></div></div>');
+  pg('nomina',
+    '<div class="stit" style="margin-bottom:12px">Nomina de pago</div>'+
+    '<div class="card">'+
+      '<div class="fg fg2" style="margin-bottom:12px">'+
+        '<div class="field"><label>Desde</label><input type="date" id="id" value="'+iD+'" onchange="iD=this.value"></div>'+
+        '<div class="field"><label>Hasta</label><input type="date" id="ih" value="'+iH+'" onchange="iH=this.value"></div>'+
+      '</div>'+
+      '<button class="btn bg bfull" onclick="genNomina()">&#x1F4CA; Generar nomina completa</button>'+
+    '</div>'+
+    '<div id="nom-res"></div>');
 }
+
+window.imprimirNomina=function(){
+  var el=document.getElementById('nom-res');
+  if(!el||!el.innerHTML.trim()){toast('Genera el informe primero','err');return;}
+  var w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>XURI - Nomina</title><style>*{box-sizing:border-box}body{font-family:sans-serif;font-size:10px;padding:16px;color:#111}table{width:100%;border-collapse:collapse}th{background:#1a5c32;color:#fff;padding:6px 8px;text-align:left;font-size:9px}td{padding:5px 8px;border-bottom:1px solid #eee}tr.tot td{background:#1a5c32;color:#fff;font-weight:700;border:none}.tr{text-align:right}.tc{text-align:center}.chip{background:#e8f3e8;color:#1a5c32;padding:1px 5px;border-radius:99px;font-size:9px}.bdg-g{background:#d4edda;color:#155724;padding:1px 5px;border-radius:99px;font-size:9px}.bdg-b{background:#d0e8f5;color:#0c4a6e;padding:1px 5px;border-radius:99px;font-size:9px}.dc{color:#c0392b;font-weight:700}.ihdr{background:#1a5c32;color:#fff;padding:10px 14px;border-radius:4px 4px 0 0;margin-bottom:0}.ihdr h3,.ihdr .iemp,.ihdr .iper{color:rgba(255,255,255,.9)}button{display:none}@media print{button{display:none}}</style></head><body>'+
+    '<p style="font-size:9px;color:#888;margin-bottom:4px">EMPRESA: XURI S.A. - NOMINA DE TRABAJADORES EVENTUALES</p>'+
+    el.innerHTML+
+    '<p style="margin-top:14px;font-size:9px;color:#aaa">Generado: '+new Date().toLocaleString('es-EC')+'</p></body></html>');
+  w.document.close();setTimeout(()=>w.print(),400);
+};
 window.rNominaManual=function(){
   document.getElementById('nom-manual').style.display='block';
 };
@@ -1102,37 +1145,126 @@ window.imprimirNominaManual=function(){
 };
 
 window.genNomina=function(){
-  const desde=document.getElementById('id').value,hasta=document.getElementById('ih').value,area=document.getElementById('ia').value;
-  iD=desde;iH=hasta;iA=area;
-  // Si no se selecciona área, mostrar todos los trabajadores juntos (nómina junta)
-  const tr=CACHE.trabajadores.filter(t=>!area||t.area===area);
-  let tD=0,tP=0,tDes=0,n=0;
-  const fi=tr.map(t=>{
-    let r;
-    let sDiario;
-    let justificados=0;
-    if(t.area==='ADMINISTRACION'){
-      r=resTAdmin(t.id,t.sueldo||500,desde,hasta);
-      sDiary=Math.round((t.sueldo||500)/30*100)/100;
-      sDiario='$'+sDiary.toFixed(2);
-      // Contar días justificados para administrativos
-      justificados=CACHE.asistencias.filter(a=>a.tId===t.id&&a.fecha>=desde&&a.fecha<=hasta&&a.justificado).length;
+  const desde=document.getElementById('id').value,hasta=document.getElementById('ih').value;
+  iD=desde;iH=hasta;
+  if(!desde||!hasta){toast('Seleccione rango de fechas','err');return;}
+
+  // Función de cálculo unificada por tipo de pago
+  function calcPagoTrabajador(t,desde,hasta){
+    var asist=CACHE.asistencias.filter(function(a){
+      return a.tId===t.id&&!a.falta&&!a.justificado&&a.fecha>=desde&&a.fecha<=hasta;
+    });
+    var tipoPago=t.tipoPago||'diario';
+    var valor=t.valorPago||t.sueldo||20;
+    var totalPago=0,totalDias=0,totalDescuento=0;
+
+    if(tipoPago==='diario'){
+      // $20 L-V, $25 sáb/dom/feriado proporcional a horas
+      asist.forEach(function(a){
+        totalDias++;
+        var d=new Date(a.fecha+'T12:00:00');
+        var esFin=d.getDay()===0||d.getDay()===6||a.feriado;
+        if(esFin){
+          // Calcular horas trabajadas
+          var ent=toMin(a.entrada||'08:00');
+          var sal=toMin(a.salida||'18:00');
+          var horas=(sal-ent)/60;
+          if(a.almuerzo)horas=Math.max(0,horas-1);
+          var jornadaRef=9; // 9h efectivas = día completo
+          var pago=Math.min(25,Math.round((horas/jornadaRef)*25*100)/100);
+          totalPago+=pago;
+        } else {
+          // Día normal $20 menos descuento por atraso
+          var atraso=a.atraso||0;
+          var descuento=atraso>0?Math.round((atraso/9)*valor*100)/100:0;
+          totalDescuento+=descuento;
+          totalPago+=(valor-descuento);
+        }
+      });
     } else {
-      r=resT(t.id,desde,hasta);
-      sDiario='$20.00';
-      // Contar días justificados para bodega
-      justificados=CACHE.asistencias.filter(a=>a.tId===t.id&&a.fecha>=desde&&a.fecha<=hasta&&a.justificado).length;
+      // Mensual: valorDia=sueldo/30
+      var valorDia=Math.round((valor/30)*100)/100;
+      // Días L-V marcados
+      asist.forEach(function(a){
+        totalDias++;
+        var d=new Date(a.fecha+'T12:00:00');
+        var esFin=d.getDay()===0||d.getDay()===6||a.feriado;
+        if(esFin){
+          // Día de descanso trabajado = doble
+          var ent=toMin(a.entrada||'08:00');
+          var sal=toMin(a.salida||'17:00');
+          var horas=(sal-ent)/60;
+          if(a.almuerzo)horas=Math.max(0,horas-1);
+          var jornadaRef=8;
+          var pago=Math.min(valorDia*2,Math.round((horas/jornadaRef)*valorDia*2*100)/100);
+          totalPago+=pago;
+        } else {
+          var atraso=a.atraso||0;
+          var descuento=atraso>0?Math.round((atraso/8)*valorDia*100)/100:0;
+          totalDescuento+=descuento;
+          totalPago+=valorDia-descuento;
+        }
+      });
+      // Sábados y domingos dentro del periodo de contrato (descanso pagado)
+      var cur=new Date(desde+'T12:00:00');
+      var fin=new Date(hasta+'T12:00:00');
+      var ingreso=t.fechaIngreso||'2000-01-01';
+      var baja=t.fechaBaja||'9999-12-31';
+      while(cur<=fin){
+        var dow=cur.getDay();
+        var fStr=cur.toISOString().slice(0,10);
+        if((dow===0||dow===6)&&fStr>=ingreso&&fStr<=baja){
+          // Verificar que no fue marcado como trabajado ese día
+          var marcado=asist.find(function(a){return a.fecha===fStr;});
+          if(!marcado){
+            totalDias++;
+            totalPago+=valorDia;
+          }
+        }
+        cur.setDate(cur.getDate()+1);
+      }
     }
-    // Verificar días para ambos tipos: resT() usa 'dias', resTAdmin() usa 'diasTrabajados'
-    var diasTrabajados = r.dias || r.diasTrabajados || 0;
-    if(diasTrabajados===0)return'';n++;tD+=diasTrabajados;tP+=r.pago;tDes+=r.descVal;
-    var jornada = t.area === 'ADMINISTRACION' ? 'Mensual' : '240';
-    return'<tr><td class="tc">'+n+'</td><td><strong>'+t.nombres+'</strong></td><td style="font-family:monospace;font-size:11px">'+t.cedula+'</td><td style="font-size:11px">'+t.cargo+'</td><td style="white-space:nowrap">'+fmtF(t.fechaIngreso)+'</td><td class="tc">'+jornada+'</td><td><span class="chip">'+t.area+'</span></td><td class="tr">'+sDiario+'</td><td class="tc">'+diasTrabajados+'</td><td class="tr'+(r.descVal>0?' dc':'')+'">'+( r.atrasoH>0?r.atrasoH+'h -$'+r.descVal.toFixed(2):'--')+'</td><td class="tc">'+(justificados>0?justificados:'--')+'</td><td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td></tr>';
+    return{pago:Math.round(totalPago*100)/100,dias:totalDias,descuento:Math.round(totalDescuento*100)/100};
+  }
+
+  const tr=CACHE.trabajadores.filter(t=>t.estado==='activo'||t.estado==='contrato');
+  let tTotal=0,tDias=0,n=0;
+  const filas=tr.map(function(t){
+    var r=calcPagoTrabajador(t,desde,hasta);
+    if(r.dias===0)return'';
+    n++;tTotal+=r.pago;tDias+=r.dias;
+    var tipoPago=t.tipoPago||'diario';
+    var valor=t.valorPago||t.sueldo||20;
+    var sDiario=tipoPago==='mensual'?'$'+(valor/30).toFixed(2)+'/dia':'$'+valor+'/dia';
+    return '<tr>'+
+      '<td class="tc">'+n+'</td>'+
+      '<td><strong>'+t.nombres+'</strong></td>'+
+      '<td style="font-family:monospace;font-size:11px">'+t.cedula+'</td>'+
+      '<td style="font-size:11px">'+t.cargo+'</td>'+
+      '<td><span class="chip">'+t.area+'</span></td>'+
+      '<td><span class="bdg '+(tipoPago==='mensual'?'bdg-b':'bdg-g')+'">'+tipoPago+'</span></td>'+
+      '<td class="tr">'+sDiario+'</td>'+
+      '<td class="tc">'+r.dias+'</td>'+
+      '<td class="tr'+(r.descuento>0?' dc':'')+'">'+( r.descuento>0?'-$'+r.descuento.toFixed(2):'--')+'</td>'+
+      '<td style="font-size:11px">'+( t.banco||'--')+'</td>'+
+      '<td style="font-size:10px">'+( t.tipoCuenta||'--')+'</td>'+
+      '<td style="font-family:monospace;font-size:11px">'+( t.cuenta||'--')+'</td>'+
+      '<td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td>'+
+    '</tr>';
   }).filter(Boolean);
-  if(!fi.length){document.getElementById('nom-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return}
+
+  if(!filas.length){document.getElementById('nom-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return;}
   const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
   const per=d1.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'})+' al '+d2.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('nom-res').innerHTML='<div class="ihdr"><div class="iemp">XURI S.A. - Nómina de pago</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+(area?' - '+area:'')+'</div></div><div class="iwrap"><table><thead><tr><th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Jornada</th><th>Area</th><th>S.Diario</th><th>Dias</th><th>Faltas</th><th>Justif.</th><th>Atrasos/Desc</th><th>Total</th></tr></thead><tbody>'+fi.join('')+'<tr class="tot"><td colspan="10" style="text-align:right;padding-right:12px">TOTALES</td><td class="tc">'+tD+'</td><td class="tr">'+(tDes>0?'-$'+tDes.toFixed(2):'--')+'</td><td class="tr">$'+tP.toFixed(2)+'</td></tr></tbody></table></div><button class="btn bb" onclick="impr(\'nomina\',\''+desde+'\',\''+hasta+'\',\''+area+'\')">Imprimir nómina de pago</button>';
+  document.getElementById('nom-res').innerHTML=
+    '<div class="ihdr"><div class="iemp">XURI S.A. - Nomina de pago</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+'</div></div>'+
+    '<div class="iwrap"><table><thead><tr>'+
+      '<th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>Area</th><th>Tipo</th><th>S.Diario</th><th>Dias</th><th>Desc.</th><th>Banco</th><th>T.Cuenta</th><th># Cuenta</th><th>Total</th>'+
+    '</tr></thead><tbody>'+
+    filas.join('')+
+    '<tr class="tot"><td colspan="12" style="text-align:right;padding-right:12px">TOTAL GENERAL ('+n+' personas · '+tDias+' dias)</td><td class="tr">$'+tTotal.toFixed(2)+'</td></tr>'+
+    '</tbody></table></div>'+
+    '<button class="btn bb" style="margin-top:12px;width:100%" onclick="imprimirNomina()">&#x1F5A8; Imprimir nomina</button>';
 };
 
 // JEFE RRHH - FALTAS / AUSENCIAS
@@ -1447,34 +1579,43 @@ function rMarcAdmin(){
   if(aFechaLoaded!==aFecha){
     aFechaLoaded=aFecha;
     aMap={};
-    CACHE.asistencias.filter(function(a){return a.fecha===aFecha;}).forEach(function(a){
-      if(act.find(function(t){return t.id===a.tId;}))
-        aMap[a.tId]={presente:true,entrada:a.entrada,salida:a.salida,feriado:a.feriado,obs:a.obs||''};
+    CACHE.asistencias.filter(function(a){return a.fecha===aFecha&&act.find(function(t){return t.id===a.tId;});}).forEach(function(a){
+      if(a.falta){
+        aMap[a.tId]={presente:false,falta:true,entrada:'08:00',salida:'17:00',feriado:false,atraso:0,almuerzo:false,obs:a.obs||''};
+      } else {
+        aMap[a.tId]={presente:true,falta:false,entrada:a.entrada,salida:a.salida,feriado:a.feriado,atraso:a.atraso||0,almuerzo:a.almuerzo||false,obs:a.obs||''};
+      }
     });
   } else {
-    CACHE.asistencias.filter(function(a){return a.fecha===aFecha;}).forEach(function(a){
-      if(!aMap[a.tId]&&act.find(function(t){return t.id===a.tId;}))
-        aMap[a.tId]={presente:true,entrada:a.entrada,salida:a.salida,feriado:a.feriado,obs:a.obs||''};
+    CACHE.asistencias.filter(function(a){return a.fecha===aFecha&&act.find(function(t){return t.id===a.tId;});}).forEach(function(a){
+      if(!aMap[a.tId]){
+        if(a.falta){
+          aMap[a.tId]={presente:false,falta:true,entrada:'08:00',salida:'17:00',feriado:false,atraso:0,almuerzo:false,obs:a.obs||''};
+        } else {
+          aMap[a.tId]={presente:true,falta:false,entrada:a.entrada,salida:a.salida,feriado:a.feriado,atraso:a.atraso||0,almuerzo:a.almuerzo||false,obs:a.obs||''};
+        }
+      }
     });
   }
 
   var rows=act.map(function(t){
-    var m=aMap[t.id]||{presente:false,entrada:'08:00',salida:'17:00',feriado:eFin,obs:''};
-    var valorDia=calcPAdmin(aFecha,m.entrada,m.salida,m.feriado,t.sueldo||500);
-    var pagoHtml=m.presente?'<div class="mpago">$'+valorDia.toFixed(2)+'</div><div style="font-size:10px;color:var(--t2)">1 dia</div>':'';
+    var m=aMap[t.id]||{presente:false,entrada:'08:00',salida:'17:00',feriado:eFin,atraso:0,almuerzo:false,obs:''};
     var eFinVal=eFin?1:0;
-    return '<div class="mcard'+(m.presente?' pre':'')+'" id="ama-'+t.id+'">'+
+    var esFin=eFin||m.feriado;
+    return '<div class="mcard'+(m.presente?' pre':m.falta?' style=\"border-color:var(--r);background:#fde8e4\"':'')+'" id="ama-'+t.id+'">'+
       '<div class="mtop">'+
-        '<div class="mchk'+(m.presente?' on':'')+'" id="amchk-'+t.id+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onclick="togABtn(this)">'+(m.presente?'&#x2713;':'')+'</div>'+
-        '<div style="flex:1"><div class="mname">'+t.nombres+'</div><div class="marea">'+t.cargo+'</div></div>'+
-        '<div id="apd-'+t.id+'" style="text-align:right">'+pagoHtml+'</div>'+
+        '<div class="mchk'+(m.presente?' on':'')+'" id="amchk-'+t.id+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onclick="togABtn(this)">'+(m.presente?'&#x2713;':m.falta?'&#x2717;':'')+'</div>'+
+        '<div style="flex:1"><div class="mname">'+t.nombres+'</div><div class="marea">'+t.cargo+(m.falta?' &nbsp;<span style="background:var(--r);color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700">FALTA</span>':'')+'</div></div>'+
       '</div>'+
       '<div class="mdet'+(m.presente?' show':'')+'" id="amdet-'+t.id+'">'+
-        '<div class="mtimes">'+
-          '<div class="field"><label>Entrada</label><input type="time" id="aent-'+t.id+'" value="'+m.entrada+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updABtn(this)"></div>'+
-          '<div class="field"><label>Salida</label><input type="time" id="asal-'+t.id+'" value="'+m.salida+'" data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updABtn(this)"></div>'+
-        '</div>'+
-        '<label class="mfer-row"><input type="checkbox" id="afer-'+t.id+'" '+(m.feriado?'checked':'')+' data-id="'+t.id+'" data-efin="'+eFinVal+'" onchange="updABtn(this)" style="width:18px;height:18px;accent-color:var(--v)"><span>Feriado (tarifa $25)</span></label>'+
+        (esFin
+          ? '<div class="mtimes">'+
+              '<div class="field"><label>Entrada</label><input type="time" id="aent-'+t.id+'" value="'+m.entrada+'" data-id="'+t.id+'"></div>'+
+              '<div class="field"><label>Salida</label><input type="time" id="asal-'+t.id+'" value="'+m.salida+'" data-id="'+t.id+'"></div>'+
+            '</div>'+
+            '<label class="mfer-row"><input type="checkbox" id="aalm-'+t.id+'" '+(m.almuerzo?'checked':'')+' style="width:18px;height:18px;accent-color:var(--v)"><span>Tomo hora de almuerzo (se descuenta 1h)</span></label>'
+          : '<div class="field" style="margin-bottom:8px"><label>Atraso (horas)</label><input type="number" id="aatr-'+t.id+'" min="0" max="8" step="0.5" value="'+(m.atraso||0)+'" placeholder="0" style="max-width:120px"></div>'
+        )+
         '<div class="field"><label>Observacion</label><input id="aobs-'+t.id+'" value="'+(m.obs||'')+'" placeholder="Opcional..."></div>'+
       '</div>'+
       (!m.presente?
@@ -1492,7 +1633,7 @@ function rMarcAdmin(){
   pg('marc_admin',
     '<div class="shdr"><div><div class="stit">Marcacion - Administrativos</div><div class="ssub">'+fmtFL(aFecha)+'</div></div>'+
     '<div class="field" style="margin:0"><input type="date" id="afd" value="'+aFecha+'" onchange="chAFecha(this.value)" style="font-size:13px;padding:7px 10px"></div></div>'+
-    (eFin?'<div class="alerto">Fin de semana - tarifa $25/dia</div>':'')+
+    (eFin?'<div class="alerto">Fin de semana - registre hora entrada, salida y si tomo almuerzo</div>':'')+
     (act.length ? rows : '<div class="empty">Sin administrativos eventuales activos.</div>')+
     '<div style="position:sticky;bottom:8px;margin-top:16px;padding:4px">'+
       '<button class="btn bg bfull" style="box-shadow:0 4px 12px rgba(26,92,50,.35);font-size:15px;padding:14px" onclick="guardAdmin()">&#x1F4BE; Guardar marcacion del dia</button>'+
@@ -1544,39 +1685,34 @@ window.guardAdmin=async function(){
   var btns=document.querySelectorAll('[onclick="guardAdmin()"]');
   btns.forEach(function(b){b.disabled=true;b.textContent='Guardando...';});
   try{
-    console.log('DEBUG guardAdmin - Trabajadores ADMIN activos:', act.length);
-    console.log('DEBUG guardAdmin - aMap:', aMap);
-    
+    var d=new Date(aFecha+'T12:00:00');
+    var eFin=d.getDay()===0||d.getDay()===6;
     var registros=act.filter(function(t){return aMap[t.id]&&aMap[t.id].presente;}).map(function(t){
-      console.log('DEBUG guardAdmin - Procesando trabajador:', t.nombres, 'presente:', aMap[t.id]?.presente);
+      var esFin=eFin||aMap[t.id].feriado;
+      var entEl=document.getElementById('aent-'+t.id);
+      var salEl=document.getElementById('asal-'+t.id);
+      var almEl=document.getElementById('aalm-'+t.id);
+      var atrEl=document.getElementById('aatr-'+t.id);
+      var obsEl=document.getElementById('aobs-'+t.id);
       return{
         tId:t.id,fecha:aFecha,
-        entrada:document.getElementById('aent-'+t.id)?.value||aMap[t.id].entrada,
-        salida:document.getElementById('asal-'+t.id)?.value||aMap[t.id].salida,
-        feriado:document.getElementById('afer-'+t.id)?document.getElementById('afer-'+t.id).checked:false,
-        obs:document.getElementById('aobs-'+t.id)?.value||''
+        entrada:entEl?entEl.value:'08:00',
+        salida:salEl?salEl.value:'17:00',
+        feriado:esFin,
+        almuerzo:almEl?almEl.checked:false,
+        atraso:atrEl?parseFloat(atrEl.value)||0:0,
+        obs:obsEl?obsEl.value:''
       };
     });
-    
-    console.log('DEBUG guardAdmin - Registros a guardar:', registros.length);
-    console.log('DEBUG guardAdmin - Registros:', registros);
-    
-    // Borrar registros existentes
-    var existentes = CACHE.asistencias.filter(function(a){return a.fecha===aFecha&&act.find(function(t){return t.id===a.tId});});
-    console.log('DEBUG guardAdmin - Registros existentes a borrar:', existentes.length);
+    // Borrar registros existentes (solo ADMIN)
+    var existentes=CACHE.asistencias.filter(function(a){return a.fecha===aFecha&&act.find(function(t){return t.id===a.tId;});});
     await Promise.all(existentes.map(function(a){return fdel('asistencias',a.id);}));
-    
     // Guardar nuevos registros
-    console.log('DEBUG guardAdmin - Guardando registros en Firebase...');
     await Promise.all(registros.map(function(r){return fadd('asistencias',r);}));
-    console.log('DEBUG guardAdmin - Registros guardados exitosamente');
-    registros.forEach(function(r){aMap[r.tId]={presente:true,entrada:r.entrada,salida:r.salida,feriado:r.feriado,obs:r.obs};});
+    registros.forEach(function(r){aMap[r.tId]={presente:true,entrada:r.entrada,salida:r.salida,feriado:r.feriado,almuerzo:r.almuerzo,atraso:r.atraso,obs:r.obs};});
     aFechaLoaded=aFecha;
     toast('Marcacion admin guardada: '+registros.length+' persona'+(registros.length!==1?'s':''));
-    // Forzar actualización del historial con delay para asegurar que Firebase actualice
-    setTimeout(function(){
-      if(tabActual==='hist_admin')rHistAdmin();
-    }, 1000);
+    setTimeout(function(){if(tabActual==='hist_admin')rHistAdmin();},1000);
   }catch(e){toast('Error: '+e.message,'err');}
   finally{btns.forEach(function(b){b.disabled=false;b.innerHTML='&#x1F4BE; Guardar marcacion del dia';});}
 };
@@ -1643,54 +1779,27 @@ window.genFaltasAdmin=function(){
 function rHistAdmin(){
   var act=CACHE.trabajadores.filter(function(t){return t.area==='ADMINISTRACION';});
   var as=[...CACHE.asistencias.filter(function(a){return act.find(function(t){return t.id===a.tId;});})].sort(function(a,b){return b.fecha.localeCompare(a.fecha);});
-  
-  // Debug: mostrar información en consola
-  console.log('DEBUG rHistAdmin - Trabajadores ADMIN:', act.length);
-  console.log('DEBUG rHistAdmin - Asistencias filtradas:', as.length);
-  console.log('DEBUG rHistAdmin - Total asistencias en CACHE:', CACHE.asistencias.length);
-  
-  // Forzar actualización si hay trabajadores pero no asistencias
-  if(act.length > 0 && as.length === 0 && CACHE.asistencias.length > 0) {
-    console.log('DEBUG: Forzando recálculo de asistencias');
-    // Reintentar el filtrado
-    as = CACHE.asistencias.filter(function(a){return act.find(function(t){return t.id===a.tId;});});
-    console.log('DEBUG: Asistencias después de reintentar:', as.length);
-  }
-  // Resumen por persona con semana integral
-  var resumenHtml=act.filter(function(t){return t.estado==='activo'||t.estado==='contrato';}).map(function(t){
-    // Usar rango dinámico: desde hace 30 días hasta hoy
-    var hace30 = new Date();
-    hace30.setDate(hace30.getDate() - 30);
-    var r=resTAdmin(t.id,t.sueldo||500,hace30.toISOString().slice(0,10),hoy());
-    // Mostrar siempre los trabajadores activos, incluso si no tienen días trabajados
-    return '<div style="background:var(--vc);border:1px solid #b8d8b8;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'+
-      '<div>'+
-        '<div style="font-weight:700;font-size:13px">'+t.nombres+'</div>'+
-        '<div style="font-size:11px;color:var(--t2)">'+r.diasTrabajados+' dias'+
-          (r.semanasIntegrales>0?' + <strong style="color:var(--v)">'+r.bonoDias+' bono</strong> ('+r.semanasIntegrales+' sem. integral)':'')+
-        '</div>'+
-      '</div>'+
-      '<strong style="color:var(--v);font-size:15px">$'+(r.pago||0).toFixed(2)+'</strong>'+
-    '</div>';
-  }).join('');
   pg('hist_admin',
-    '<div class="shdr"><div class="stit">Historial administrativos</div></div>'+
-    (resumenHtml?'<div style="margin-bottom:12px">'+resumenHtml+'</div>':'')+
+    '<div class="shdr"><div class="stit">Historial administrativos</div><div class="ssub">Solo lectura. Para corregir dias anteriores, contacte a RRHH.</div></div>'+
     (as.length
-      ? '<div class="iwrap"><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Entrada</th><th>Atraso</th><th>Pago</th></tr></thead><tbody>'+
+      ? '<div class="iwrap"><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Estado</th><th>Detalle</th></tr></thead><tbody>'+
         as.map(function(a){
           var t=CACHE.trabajadores.find(function(x){return x.id===a.tId;});
           if(!t)return'';
           var esFalta=a.falta;
           var esJ=a.justificado;
-          var c=(!esFalta&&!esJ)?calcPAdmin(a.fecha,a.entrada,a.salida,a.feriado,t.sueldo||500):null;
-          var pagoStr=esFalta?'<span style="color:var(--r);font-weight:700">FALTA</span>':esJ?'Justif.':'$'+(c?.pago||0).toFixed(2);
+          var d=new Date(a.fecha+'T12:00:00');
+          var esFin=d.getDay()===0||d.getDay()===6||a.feriado;
+          var detalle='';
+          if(esFalta) detalle='<span style="color:var(--r);font-weight:700">FALTA</span>';
+          else if(esJ) detalle='<span style="color:var(--a);font-weight:700">Justificado</span>';
+          else if(esFin) detalle=a.entrada+' - '+a.salida+(a.almuerzo?' · almuerzo desc.':'');
+          else detalle='Presente'+(a.atraso>0?' · <span style="color:var(--r)">atraso '+a.atraso+'h</span>':'');
           return '<tr>'+
             '<td style="white-space:nowrap">'+fmtF(a.fecha)+'</td>'+
             '<td><strong>'+t.nombres+'</strong><br><span style="font-size:10px;color:var(--t3)">'+t.cargo+'</span></td>'+
-            '<td>'+(esFalta?'<span style="color:var(--r)">Falta</span>':esJ?'<span style="color:var(--a)">Justif.</span>':a.entrada+' - '+a.salida)+'</td>'+
-            '<td class="tc">--</td>'+
-            '<td class="tr"><strong>'+pagoStr+'</strong></td>'+
+            '<td>'+(esFalta?'<span class="bdg bdg-r">Falta</span>':esJ?'<span class="bdg bdg-o">Justif.</span>':esFin?'<span class="bdg bdg-b">Fin sem.</span>':'<span class="bdg bdg-g">Presente</span>')+'</td>'+
+            '<td>'+detalle+'</td>'+
           '</tr>';
         }).join('')+
         '</tbody></table></div>'
