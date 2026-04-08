@@ -986,6 +986,55 @@ window.imprimirNomina=function(){
     '<p style="margin-top:14px;font-size:9px;color:#aaa">Generado: '+new Date().toLocaleString('es-EC')+'</p></body></html>');
   w.document.close();setTimeout(()=>w.print(),400);
 };
+window.exportarNominaExcel=function(){
+  var el=document.getElementById('nom-res');
+  if(!el||!el.innerHTML.trim()){toast('Genera el informe primero','err');return;}
+  var table=el.querySelector('table');
+  if(!table){toast('Sin datos para exportar','err');return;}
+  var rows=[];
+  var ths=table.querySelectorAll('thead th');
+  var headers=[];
+  ths.forEach(function(th){headers.push(th.innerText||th.textContent);});
+  rows.push(headers);
+  var trs=table.querySelectorAll('tbody tr');
+  trs.forEach(function(tr){
+    var tds=tr.querySelectorAll('td');
+    var row=[];
+    tds.forEach(function(td){
+      var txt=(td.innerText||td.textContent).trim().replace(/\$|,/g,'');
+      var num=parseFloat(txt);
+      row.push(!isNaN(num)&&txt!==''?num:txt);
+    });
+    rows.push(row);
+  });
+  var xml='<?xml version="1.0" encoding="UTF-8"?>\n'
+    +'<?mso-application progid="Excel.Sheet"?>\n'
+    +'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n'
+    +' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n'
+    +'<Worksheet ss:Name="Nomina">\n<Table>\n';
+  rows.forEach(function(row){
+    xml+='<Row>';
+    row.forEach(function(cell){
+      var tipo=typeof cell==='number'?'Number':'String';
+      var val=String(cell).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      xml+='<Cell><Data ss:Type="'+tipo+'">'+val+'</Data></Cell>';
+    });
+    xml+='</Row>\n';
+  });
+  xml+='</Table>\n</Worksheet>\n</Workbook>';
+  var blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  var desde=document.getElementById('id')?document.getElementById('id').value:'';
+  var hasta=document.getElementById('ih')?document.getElementById('ih').value:'';
+  a.href=url;
+  a.download='XURI_Nomina_'+(desde||'')+'_'+(hasta||'')+'.xls';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Excel descargado');
+};
 window.rNominaManual=function(){
   document.getElementById('nom-manual').style.display='block';
 };
@@ -1266,7 +1315,7 @@ window.genNomina=function(){
     filas.join('')+
     '<tr class="tot"><td colspan="12" style="text-align:right;padding-right:12px">TOTAL GENERAL ('+n+' personas · '+tDias+' dias)</td><td class="tr">$'+tTotal.toFixed(2)+'</td></tr>'+
     '</tbody></table></div>'+
-    '<button class="btn bb" style="margin-top:12px;width:100%" onclick="imprimirNomina()">&#x1F5A8; Imprimir nomina</button>';
+    '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn bb" style="flex:1" onclick="imprimirNomina()">&#x1F5A8; Imprimir nomina</button><button class="btn bg" style="flex:1" onclick="exportarNominaExcel()">&#x1F4C5; Exportar Excel</button></div>';
 };
 
 // JEFE RRHH - FALTAS / AUSENCIAS
