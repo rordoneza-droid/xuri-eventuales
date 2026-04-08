@@ -2,7 +2,7 @@
   "name": "XURI S.A. - Eventuales",
   "short_name": "XURI",
   "description": "Control de trabajadores eventuales",
-  "start_url": "./xuri_eventuales_v4.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a5c32",
   "theme_color": "#1a5c32",
