@@ -569,7 +569,7 @@ async function execBorr(tipo,id){
     }
     // Forzar re-render explícito por si el debounce ya pasó
     if(ROL&&tabActual){
-      var renders={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,faltas:rFaltas,historial:rHist,bajas:rBajas,marc_admin:rMarcAdmin,faltas_admin:rFaltasAdmin,hist_admin:rHistAdmin,sv_vista:rSV,sv_periodos:rSVP,informe:rInf,transferencias:rTrans,personal:rPers,admin_evt:rAdminEvt,jlnegra:rJLN};
+      var renders={trabajadores:rT,estados:rE,lnegra:rLN,marcacion:rM,faltas:rFaltas,historial:rHist,bajas:rBajas,marc_admin:rMarcAdmin,faltas_admin:rFaltasAdmin,hist_admin:rHistAdmin,sv_vista:rSV,sv_periodos:rSVP,nomina:rNomina,personal:rPers,admin_evt:rAdminEvt,jlnegra:rJLN};
       if(renders[tabActual])renders[tabActual]();
     }
   }catch(e){toast('Error: '+e.message,'err');}
