@@ -991,49 +991,158 @@ window.exportarNominaExcel=function(){
   if(!el||!el.innerHTML.trim()){toast('Genera el informe primero','err');return;}
   var table=el.querySelector('table');
   if(!table){toast('Sin datos para exportar','err');return;}
-  var rows=[];
+  // Obtener encabezados
   var ths=table.querySelectorAll('thead th');
   var headers=[];
-  ths.forEach(function(th){headers.push(th.innerText||th.textContent);});
-  rows.push(headers);
+  ths.forEach(function(th){headers.push((th.innerText||th.textContent).trim());});
+  // Obtener filas de datos y fila de totales
+  var dataRows=[];
+  var totRow=null;
   var trs=table.querySelectorAll('tbody tr');
   trs.forEach(function(tr){
+    var esTot=tr.classList.contains('tot');
     var tds=tr.querySelectorAll('td');
     var row=[];
     tds.forEach(function(td){
-      var txt=(td.innerText||td.textContent).trim().replace(/\$|,/g,'');
+      var txt=(td.innerText||td.textContent).trim().replace(/[$]/g,'').replace(/,/g,'');
       var num=parseFloat(txt);
-      row.push(!isNaN(num)&&txt!==''?num:txt);
+      row.push(!isNaN(num)&&txt!==''&&txt!=='--'?num:txt);
     });
-    rows.push(row);
+    if(esTot)totRow=row; else dataRows.push(row);
   });
+  var desde=document.getElementById('id')?document.getElementById('id').value:'';
+  var hasta=document.getElementById('ih')?document.getElementById('ih').value:'';
+  // ── Construir XML Excel con estilos ──
   var xml='<?xml version="1.0" encoding="UTF-8"?>\n'
     +'<?mso-application progid="Excel.Sheet"?>\n'
-    +'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n'
+    +'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"'
+    +' xmlns:o="urn:schemas-microsoft-com:office:office"'
+    +' xmlns:x="urn:schemas-microsoft-com:office:excel"'
     +' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n'
-    +'<Worksheet ss:Name="Nomina">\n<Table>\n';
-  rows.forEach(function(row){
-    xml+='<Row>';
-    row.forEach(function(cell){
-      var tipo=typeof cell==='number'?'Number':'String';
-      var val=String(cell).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      xml+='<Cell><Data ss:Type="'+tipo+'">'+val+'</Data></Cell>';
+    +'<Styles>\n'
+    // Titulo empresa
+    +'<Style ss:ID="sTit"><Font ss:Bold="1" ss:Size="14" ss:Color="#1a5c32"/>'
+    +'<Alignment ss:Horizontal="Center"/></Style>\n'
+    // Subtitulo periodo
+    +'<Style ss:ID="sSub"><Font ss:Italic="1" ss:Size="10" ss:Color="#5a7a5a"/>'
+    +'<Alignment ss:Horizontal="Center"/></Style>\n'
+    // Encabezado tabla: fondo verde oscuro, texto blanco, negrita
+    +'<Style ss:ID="sHdr"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="10"/>'
+    +'<Interior ss:Color="#1a5c32" ss:Pattern="Solid"/>'
+    +'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" ss:Color="#FFFFFF"/></Borders>'
+    +'<Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style>\n'
+    // Celda normal
+    +'<Style ss:ID="sDat"><Font ss:Size="10"/>'
+    +'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#dde5dd"/></Borders>'
+    +'<Alignment ss:Vertical="Center"/></Style>\n'
+    // Celda numero
+    +'<Style ss:ID="sNum"><Font ss:Size="10"/>'
+    +'<NumberFormat ss:Format="#,##0.00"/>'
+    +'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#dde5dd"/></Borders>'
+    +'<Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>\n'
+    // Celda nombre (negrita)
+    +'<Style ss:ID="sNom"><Font ss:Bold="1" ss:Size="10"/>'
+    +'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#dde5dd"/></Borders>'
+    +'<Alignment ss:Vertical="Center"/></Style>\n'
+    // Fila alternada
+    +'<Style ss:ID="sAlt"><Font ss:Size="10"/>'
+    +'<Interior ss:Color="#f4f6f4" ss:Pattern="Solid"/>'
+    +'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#dde5dd"/></Borders>'
+    +'<Alignment ss:Vertical="Center"/></Style>\n'
+    // Fila alternada numero
+    +'<Style ss:ID="sAltN"><Font ss:Size="10"/>'
+    +'<Interior ss:Color="#f4f6f4" ss:Pattern="Solid"/>'
+    +'<NumberFormat ss:Format="#,##0.00"/>'
+    +'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#dde5dd"/></Borders>'
+    +'<Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>\n'
+    // Descuento (rojo)
+    +'<Style ss:ID="sDsc"><Font ss:Bold="1" ss:Color="#c0392b" ss:Size="10"/>'
+    +'<NumberFormat ss:Format="#,##0.00"/>'
+    +'<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#dde5dd"/></Borders>'
+    +'<Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>\n'
+    // Total final: fondo verde, texto blanco, negrita
+    +'<Style ss:ID="sTot"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>'
+    +'<Interior ss:Color="#1a5c32" ss:Pattern="Solid"/>'
+    +'<NumberFormat ss:Format="#,##0.00"/>'
+    +'<Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>\n'
+    +'<Style ss:ID="sTotL"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/>'
+    +'<Interior ss:Color="#1a5c32" ss:Pattern="Solid"/>'
+    +'<Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>\n'
+    +'</Styles>\n'
+    +'<Worksheet ss:Name="Nomina XURI">\n'
+    +'<Table ss:DefaultRowHeight="18">\n';
+
+  // Fila 1: Empresa
+  xml+='<Row ss:Height="28"><Cell ss:MergeAcross="'+(headers.length-1)+'" ss:StyleID="sTit">'
+    +'<Data ss:Type="String">XURI S.A. — NÓMINA DE TRABAJADORES EVENTUALES</Data></Cell></Row>\n';
+  // Fila 2: Periodo
+  var perTxt='Periodo: '+( desde||'--')+' al '+(hasta||'--');
+  xml+='<Row ss:Height="18"><Cell ss:MergeAcross="'+(headers.length-1)+'" ss:StyleID="sSub">'
+    +'<Data ss:Type="String">'+perTxt+'</Data></Cell></Row>\n';
+  // Fila 3: vacía
+  xml+='<Row ss:Height="8"><Cell ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String"></Data></Cell></Row>\n';
+
+  // Fila encabezados
+  xml+='<Row ss:Height="28">';
+  headers.forEach(function(h){
+    xml+='<Cell ss:StyleID="sHdr"><Data ss:Type="String">'+h.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</Data></Cell>';
+  });
+  xml+='</Row>\n';
+
+  // Columnas con numeros: indices de Total(12), Desc(8), S.Diario(6)
+  var numCols={6:true,7:true,8:true,12:true};
+  var descCol=8; // Descuentos en rojo
+
+  // Filas de datos
+  dataRows.forEach(function(row,ri){
+    var par=ri%2===0;
+    xml+='<Row ss:Height="20">';
+    row.forEach(function(cell,ci){
+      var esNum=typeof cell==='number';
+      var esDesc=ci===descCol&&esNum&&cell<0;
+      var esNom=ci===1;
+      var stilo;
+      if(ci===descCol&&esNum){stilo='sDsc';}
+      else if(esNum&&numCols[ci]){stilo=par?'sNum':'sAltN';}
+      else if(esNom){stilo='sNom';}
+      else{stilo=par?'sDat':'sAlt';}
+      var tipo=esNum?'Number':'String';
+      var val=esNum?Math.abs(cell):String(cell).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      xml+='<Cell ss:StyleID="'+stilo+'"><Data ss:Type="'+tipo+'">'+val+'</Data></Cell>';
     });
     xml+='</Row>\n';
   });
+
+  // Fila de totales
+  if(totRow){
+    xml+='<Row ss:Height="24">';
+    totRow.forEach(function(cell,ci){
+      var esNum=typeof cell==='number';
+      var stilo=esNum?'sTot':'sTotL';
+      var tipo=esNum?'Number':'String';
+      var val=esNum?cell:String(cell).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      xml+='<Cell ss:StyleID="'+stilo+'"><Data ss:Type="'+tipo+'">'+val+'</Data></Cell>';
+    });
+    xml+='</Row>\n';
+  }
+
+  // Fila pie
+  xml+='<Row ss:Height="8"><Cell ss:MergeAcross="'+(headers.length-1)+'"><Data ss:Type="String"></Data></Cell></Row>\n';
+  xml+='<Row ss:Height="14"><Cell ss:MergeAcross="'+(headers.length-1)+'" ss:StyleID="sSub">'
+    +'<Data ss:Type="String">Generado: '+new Date().toLocaleString('es-EC')+'</Data></Cell></Row>\n';
+
   xml+='</Table>\n</Worksheet>\n</Workbook>';
+
   var blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
-  var desde=document.getElementById('id')?document.getElementById('id').value:'';
-  var hasta=document.getElementById('ih')?document.getElementById('ih').value:'';
   a.href=url;
   a.download='XURI_Nomina_'+(desde||'')+'_'+(hasta||'')+'.xls';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  toast('Excel descargado');
+  toast('Excel con diseño descargado');
 };
 window.rNominaManual=function(){
   document.getElementById('nom-manual').style.display='block';
