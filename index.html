@@ -1432,19 +1432,20 @@ window.genNomina=function(){
       '</tr>';
   }).filter(Boolean);
 
-  if(!filas.length){document.getElementById('nom-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return;}
+ if(!filas.length){document.getElementById('nom-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return;}
   const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
   const per=d1.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'})+' al '+d2.toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
+  
   document.getElementById('nom-res').innerHTML=
     '<div class="ihdr"><div class="iemp">XURI S.A. - Nomina de pago</div><h3>Trabajadores Eventuales</h3><div class="iper">'+per+'</div></div>'+
     '<div class="iwrap"><table><thead><tr>'+
       '<th>N</th><th>Nombres</th><th>Cedula</th><th>Cargo</th><th>F.Ingreso</th><th>Area</th><th>Tipo</th><th>S.Diario</th><th>Dias</th><th>Desc.</th><th>Banco</th><th>T.Cuenta</th><th># Cuenta</th><th>Total</th>'+
     '</tr></thead><tbody>'+
     filas.join('')+
+    // Se usa colspan="13" para que el texto ocupe las primeras 13 columnas y el monto caiga en la 14 (Total)
     '<tr class="tot"><td colspan="13" style="text-align:right;padding-right:12px">TOTAL GENERAL ('+n+' personas · '+tDias+' dias)</td><td class="tr">$'+tTotal.toFixed(2)+'</td></tr>'+
     '</tbody></table></div>'+
     '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn bb" style="flex:1" onclick="imprimirNomina()">&#x1F5A8; Imprimir nomina</button><button class="btn bg" style="flex:1" onclick="exportarNominaExcel()">&#x1F4C5; Exportar Excel</button></div>';
-};
 
 // JEFE RRHH - FALTAS / AUSENCIAS
 // Muestra dias en que un trabajador activo NO fue marcado, con opcion de justificar
