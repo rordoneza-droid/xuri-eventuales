@@ -1090,8 +1090,8 @@ window.exportarNominaExcel=function(){
   xml+='</Row>\n';
 
   // Columnas con numeros: indices de Total(12), Desc(8), S.Diario(6)
-  var numCols={6:true,7:true,8:true,12:true};
-  var descCol=8; // Descuentos en rojo
+  var numCols={6:true,7:true,8:true,13:true};
+  var descCol=9; // Descuentos en rojo
 
   // Filas de datos
   dataRows.forEach(function(row,ri){
@@ -1401,7 +1401,8 @@ window.genNomina=function(){
       '<td><strong>'+t.nombres+'</strong></td>'+
       '<td style="font-family:monospace;font-size:11px">'+t.cedula+'</td>'+
       '<td style="font-size:11px">'+t.cargo+'</td>'+
-      '<td><span class="chip">'+t.area+'</span></td>'+
+      '<td style="font-size:11px">'+(t.fechaIngreso?fmtF(t.fechaIngreso):'--')+'</td>'+
+'<td><span class="chip">'+t.area+'</span></td>'+
       '<td style="font-size:11px">'+(t.fechaIngreso?fmtF(t.fechaIngreso):'--')+'</td>'+
       '<td><span class="bdg '+(tipoPago==='mensual'?'bdg-b':'bdg-g')+'">'+tipoPago+'</span></td>'+
       '<td class="tr">'+sDiario+'</td>'+
