@@ -986,32 +986,49 @@ window.imprimirNomina=function(){
     '<p style="margin-top:14px;font-size:9px;color:#aaa">Generado: '+new Date().toLocaleString('es-EC')+'</p></body></html>');
   w.document.close();setTimeout(()=>w.print(),400);
 };
-window.exportarNominaExcel=function(){
-  var el=document.getElementById('nom-res');
-  if(!el||!el.innerHTML.trim()){toast('Genera el informe primero','err');return;}
-  var table=el.querySelector('table');
-  if(!table){toast('Sin datos para exportar','err');return;}
+window.exportarNominaExcel = function() {
+  var el = document.getElementById('nom-res');
+  if (!el || !el.innerHTML.trim()) { toast('Genera el informe primero', 'err'); return; }
+  var table = el.querySelector('table');
+  if (!table) { toast('Sin datos para exportar', 'err'); return; }
+
   // Obtener encabezados
-  var ths=table.querySelectorAll('thead th');
-  var headers=[];
-  ths.forEach(function(th){headers.push((th.innerText||th.textContent).trim());});
+  var ths = table.querySelectorAll('thead th');
+  var headers = [];
+  ths.forEach(function(th) { headers.push((th.innerText || th.textContent).trim()); });
+
   // Obtener filas de datos y fila de totales
-  var dataRows=[];
-  var totRow=null;
-  var trs=table.querySelectorAll('tbody tr');
-  trs.forEach(function(tr){
-    var esTot=tr.classList.contains('tot');
-    var tds=tr.querySelectorAll('td');
-    var row=[];
-    tds.forEach(function(td){
-      var txt=(td.innerText||td.textContent).trim().replace(/[$]/g,'').replace(/,/g,'');
-      var num=parseFloat(txt);
-      row.push(!isNaN(num)&&txt!==''&&txt!=='--'?num:txt);
+  var dataRows = [];
+  var totRow = null;
+  var trs = table.querySelectorAll('tbody tr');
+
+  trs.forEach(function(tr) {
+    var esTot = tr.classList.contains('tot');
+    var tds = tr.querySelectorAll('td');
+    var row = [];
+
+    tds.forEach(function(td, ci) {
+      // Extraemos el texto de la celda
+      var txt = (td.innerText || td.textContent).trim();
+
+      // Índices de columnas que DEBEN ser números (Dinero y Días):
+      // 0 (N), 7 (S.Diario), 8 (Días), 9 (Descuento), 13 (Total)
+      if ([0, 7, 8, 9, 13].includes(ci)) {
+        var numLimpiado = txt.replace(/[$ ]/g, '').replace(/,/g, '');
+        var num = parseFloat(numLimpiado);
+        row.push(!isNaN(num) ? num : 0);
+      } else {
+        // Todo lo demás (Fecha de Ingreso, Nombres, Cédula, Cuentas) se pasa como TEXTO puro
+        // Esto evita que Excel corte la fecha al encontrar el primer número
+        row.push(txt);
+      }
     });
-    if(esTot)totRow=row; else dataRows.push(row);
+
+    if (esTot) totRow = row; else dataRows.push(row);
   });
-  var desde=document.getElementById('id')?document.getElementById('id').value:'';
-  var hasta=document.getElementById('ih')?document.getElementById('ih').value:'';
+
+  var desde = document.getElementById('id') ? document.getElementById('id').value : '';
+  var hasta = document.getElementById('ih') ? document.getElementById('ih').value : '';
   // ── Construir XML Excel con estilos ──
   var xml='<?xml version="1.0" encoding="UTF-8"?>\n'
     +'<?mso-application progid="Excel.Sheet"?>\n'
