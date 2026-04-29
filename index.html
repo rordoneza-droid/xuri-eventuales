@@ -1387,32 +1387,32 @@ window.genNomina=function(){
     return{pago:Math.round(totalPago*100)/100,dias:totalDias,descuento:Math.round(totalDescuento*100)/100};
   }
 
-  const tr=CACHE.trabajadores.filter(t=>t.estado==='activo'||t.estado==='contrato');
-  let tTotal=0,tDias=0,n=0;
-  const filas=tr.map(function(t){
-    var r=calcPagoTrabajador(t,desde,hasta);
-    if(r.dias===0)return'';
-    n++;tTotal+=r.pago;tDias+=r.dias;
-    var tipoPago=t.tipoPago||'diario';
-    var valor=t.valorPago||t.sueldo||20;
-    var sDiario=tipoPago==='mensual'?'$'+(valor/30).toFixed(2)+'/dia':'$'+valor+'/dia';
-    return '<tr>'+
-      '<td class="tc">'+n+'</td>'+
-      '<td><strong>'+t.nombres+'</strong></td>'+
-      '<td style="font-family:monospace;font-size:11px">'+t.cedula+'</td>'+
-      '<td style="font-size:11px">'+t.cargo+'</td>'+
-      '<td style="font-size:11px">'+(t.fechaIngreso?fmtF(t.fechaIngreso):'--')+'</td>'+
-'<td><span class="chip">'+t.area+'</span></td>'+
-      '<td style="font-size:11px">'+(t.fechaIngreso?fmtF(t.fechaIngreso):'--')+'</td>'+
-      '<td><span class="bdg '+(tipoPago==='mensual'?'bdg-b':'bdg-g')+'">'+tipoPago+'</span></td>'+
-      '<td class="tr">'+sDiario+'</td>'+
-      '<td class="tc">'+r.dias+'</td>'+
-      '<td class="tr'+(r.descuento>0?' dc':'')+'">'+( r.descuento>0?'-$'+r.descuento.toFixed(2):'--')+'</td>'+
-      '<td style="font-size:11px">'+( t.banco||'--')+'</td>'+
-      '<td style="font-size:10px">'+( t.tipoCuenta||'--')+'</td>'+
-      '<td style="font-family:monospace;font-size:11px">'+( t.cuenta||'--')+'</td>'+
-      '<td class="tr"><strong>$'+r.pago.toFixed(2)+'</strong></td>'+
-    '</tr>';
+ const tr = CACHE.trabajadores.filter(t => t.estado === 'activo' || t.estado === 'contrato');
+  let tTotal = 0, tDias = 0, n = 0;
+  const filas = tr.map(function(t) {
+    var r = calcPagoTrabajador(t, desde, hasta);
+    if (r.dias === 0) return '';
+    n++; tTotal += r.pago; tDias += r.dias;
+    var tipoPago = t.tipoPago || 'diario';
+    var valor = t.valorPago || t.sueldo || 20;
+    var sDiario = tipoPago === 'mensual' ? '$' + (valor / 30).toFixed(2) + '/dia' : '$' + valor + '/dia';
+
+    return '<tr>' +
+      '<td class="tc">' + n + '</td>' +
+      '<td><strong>' + t.nombres + '</strong></td>' +
+      '<td style="font-family:monospace;font-size:11px">' + t.cedula + '</td>' +
+      '<td style="font-size:11px">' + t.cargo + '</td>' +
+      '<td style="font-size:11px">' + (t.fechaIngreso ? fmtF(t.fechaIngreso) : '--') + '</td>' +
+      '<td><span class="chip">' + t.area + '</span></td>' +
+      '<td><span class="bdg ' + (tipoPago === 'mensual' ? 'bdg-b' : 'bdg-g') + '">' + tipoPago + '</span></td>' +
+      '<td class="tr">' + sDiario + '</td>' +
+      '<td class="tc">' + r.dias + '</td>' +
+      '<td class="tr' + (r.descuento > 0 ? ' dc' : '') + '">' + (r.descuento > 0 ? '-$' + r.descuento.toFixed(2) : '--') + '</td>' +
+      '<td style="font-size:11px">' + (t.banco || '--') + '</td>' +
+      '<td style="font-size:10px">' + (t.tipoCuenta || '--') + '</td>' +
+      '<td style="font-family:monospace;font-size:11px">' + (t.cuenta || '--') + '</td>' +
+      '<td class="tr"><strong>$' + r.pago.toFixed(2) + '</strong></td>' +
+      '</tr>';
   }).filter(Boolean);
 
   if(!filas.length){document.getElementById('nom-res').innerHTML='<div class="empty">Sin registros para ese periodo</div>';return;}
